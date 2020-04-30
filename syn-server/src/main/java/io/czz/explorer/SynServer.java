@@ -29,8 +29,8 @@ public class SynServer extends Jooby{
         use(new Jackson());
         use(new Flywaydb());
 
-
-        use(new Quartz(AccountSynJob.class, SynNodeSynJob.class, BlockSynJob.class));
+//        AccountSynJob.class, SynNodeSynJob.class,/
+        use(new Quartz(BlockSynJob.class));
 
 
         onStart(registry -> {
@@ -45,7 +45,7 @@ public class SynServer extends Jooby{
             settings.setRenderSchema(false);
 
             dslContext.configuration().set(settings);
-
+            System.out.println("hello");
         });
 
         onStop((registry)->{

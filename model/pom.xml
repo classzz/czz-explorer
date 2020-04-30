@@ -13,7 +13,7 @@
     <packaging>jar</packaging>
     <properties>
         <jooq.packageName>io.czz.explorer.model</jooq.packageName>
-        <createTable.sqlCommand>create database czztmp CHARACTER SET utf8</createTable.sqlCommand>
+        <createTable.sqlCommand>create database czz_explorer_prod CHARACTER SET utf8</createTable.sqlCommand>
         <mysql.container.timeout>120000</mysql.container.timeout>
         <flyway.locations>filesystem:${basedir}/src/main/resources/flyway</flyway.locations>
     </properties>
@@ -24,6 +24,13 @@
             <artifactId>jooq</artifactId>
             <version>${jooq.version}</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.codehaus.mojo/sql-maven-plugin -->
+        <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>sql-maven-plugin</artifactId>
+            <version>1.5</version>
+        </dependency>
+
     </dependencies>
 
 
@@ -62,9 +69,9 @@
 
                         <configuration>
                             <driver>com.mysql.jdbc.Driver</driver>
-                            <url>jdbc:mysql://localhost:3306?characterEncoding=utf-8&amp;serverTimezone=UTC&amp;useSSL=false</url>
+                            <url>jdbc:mysql://localhost:3306/czz_explorer_prod?characterEncoding=utf-8&amp;serverTimezone=UTC&amp;useSSL=false</url>
                             <username>root</username>
-                            <password>123456</password>
+                            <password>root</password>
                         </configuration>
 
                         <executions>
@@ -91,11 +98,11 @@
                         <version>${flyway.version}</version>
                         <configuration>
                             <driver>com.mysql.jdbc.Driver</driver>
-                            <url>jdbc:mysql://localhost:3306/czztmp?characterEncoding=utf-8&amp;serverTimezone=UTC&amp;useSSL=false</url>
+                            <url>jdbc:mysql://localhost:3306?characterEncoding=utf-8&amp;serverTimezone=UTC&amp;useSSL=false</url>
                             <user>root</user>
-                            <password>123456</password>
+                            <password>root</password>
                             <schemas>
-                                <schema>czztmp</schema>
+                                <schema>czz_explorer_prod</schema>
                             </schemas>
                             <locations>
                                 <location>${flyway.locations}</location>
@@ -133,7 +140,7 @@
                                 <driver>com.mysql.jdbc.Driver</driver>
                                 <url>jdbc:mysql://localhost:3306?characterEncoding=utf-8&amp;serverTimezone=UTC&amp;useSSL=false</url>
                                 <user>root</user>
-                                <password>123456</password>
+                                <password>root</password>
                             </jdbc>
 
                             <!-- Generator parameters -->
@@ -143,7 +150,7 @@
                                     <includes>.*</includes>
                                     <excludes>
                                     </excludes>
-                                    <inputSchema>czztmp</inputSchema>
+                                    <inputSchema>czz_explorer_prod</inputSchema>
                                     <outputSchema />
                                 </database>
                                 <target>
@@ -227,10 +234,10 @@
 
     </profiles>
 
-<!--    <repositories>-->
-<!--        <repository>-->
-<!--            <id>jitpack.io</id>-->
-<!--            <url>https://jitpack.io</url>-->
-<!--        </repository>-->
-<!--    </repositories>-->
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 </project>
