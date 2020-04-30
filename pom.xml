@@ -118,7 +118,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <configuration>
-<!--                            <additionalparam>-Xdoclint:none</additionalparam>-->
+                            <additionalparam>-Xdoclint:none</additionalparam>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -705,7 +705,7 @@
                                     <transformers>
                                         <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                                         <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-<!--                                            <mainClass>${application.class}</mainClass>-->
+                                            <mainClass>${application.class}</mainClass>
                                         </transformer>
                                     </transformers>
                                 </configuration>
@@ -719,8 +719,8 @@
                         <artifactId>jooby-maven-plugin</artifactId>
                         <version>${jooby.version}</version>
                         <configuration>
-<!--                            <mainClass>${application.class}</mainClass>-->
-<!--                            <debug>${application.debug}</debug>-->
+                            <mainClass>${application.class}</mainClass>
+                            <debug>${application.debug}</debug>
                             <includes>
                                 <include>**/*.class</include>
                                 <include>**/*.conf</include>
@@ -738,8 +738,8 @@
     </profiles>
     <repositories>
         <repository>
-            <id>Mulesoft Repository</id>
-            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 </project>

@@ -8,7 +8,6 @@ import io.czz.explorer.dto.JsonParam;
 import io.czz.explorer.dto.ListModel;
 import io.czz.explorer.dto.ListResult;
 import io.czz.explorer.dto.account.AccountCriteria;
-import io.czz.explorer.dto.account.AccountDTO;
 import io.czz.explorer.dto.account.Accountdto;
 import io.czz.explorer.dto.block.BlockDTO;
 import io.czz.explorer.dto.transaction.TransferModel;
@@ -73,9 +72,9 @@ public class AccountService {
 		return this.dslContext.select(DSL.count()).from(ACCOUNT).fetchOneInto(Integer.class);
 	}
 
-	public List<AccountDTO> getLatestAccounts(int limit){
+	public List<Accountdto> getLatestAccounts(int limit){
 
-		return this.dslContext.select(ACCOUNT.fields()).from(ACCOUNT).orderBy(ACCOUNT.CREATED_TIME.desc()).limit(limit).fetchInto(AccountDTO.class);
+		return this.dslContext.select(ACCOUNT.fields()).from(ACCOUNT).orderBy(ACCOUNT.CREATED_TIME.desc()).limit(limit).fetchInto(Accountdto.class);
 
 	}
 
