@@ -13,7 +13,7 @@
     <packaging>jar</packaging>
     <properties>
         <jooq.packageName>io.czz.explorer.model</jooq.packageName>
-        <createTable.sqlCommand>create database czz_explorer_prod CHARACTER SET utf8</createTable.sqlCommand>
+        <createTable.sqlCommand>create database czztmp CHARACTER SET utf8</createTable.sqlCommand>
         <mysql.container.timeout>120000</mysql.container.timeout>
         <flyway.locations>filesystem:${basedir}/src/main/resources/flyway</flyway.locations>
     </properties>

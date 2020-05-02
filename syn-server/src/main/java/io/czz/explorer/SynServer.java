@@ -16,6 +16,9 @@ import org.jooq.conf.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+
 public class SynServer extends Jooby{
     private static final Logger logger = LoggerFactory.getLogger(SynServer.class);
 
@@ -30,7 +33,7 @@ public class SynServer extends Jooby{
         use(new Flywaydb());
 
 //        AccountSynJob.class, SynNodeSynJob.class,/
-        use(new Quartz(BlockSynJob.class));
+        use(new Quartz( AccountSynJob.class,SynNodeSynJob.class,BlockSynJob.class ));
 
 
         onStart(registry -> {
@@ -44,8 +47,20 @@ public class SynServer extends Jooby{
             Settings settings = new Settings();
             settings.setRenderSchema(false);
 
+            //用户名
+            String userName = "root";
+            //密码
+            String password = "root";
+            //mysql链接url
+            String url = "jdbc:mysql://localhost:3306/czz_explorer_prod";
+
+            //这是JDBC Mysql连接
+            Connection conn = DriverManager.getConnection(url, userName, password);
+            //基于JOOQ实现的简单查询
+            //传入Connection连接对象、数据方言得到一个DSLContext的实例，然后使用DSL对象查询得到一个Result对象。
+
             dslContext.configuration().set(settings);
-            System.out.println("hello");
+            dslContext.configuration().set(conn);
         });
 
         onStop((registry)->{

@@ -13,7 +13,6 @@
       <totalSizeCap>1mb</totalSizeCap>
       <maxHistory>7</maxHistory>
     </rollingPolicy>
-
     <encoder>
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
     </encoder>
