@@ -4,6 +4,7 @@ package io.czz.explorer;
 
 import io.czz.explorer.job.AccountSynJob;
 import io.czz.explorer.job.BlockSynJob;
+import io.czz.explorer.job.FullNodeBlockSynJob;
 import io.czz.explorer.job.SynNodeSynJob;
 import org.jooby.Jooby;
 import org.jooby.flyway.Flywaydb;
@@ -33,7 +34,7 @@ public class SynServer extends Jooby{
         use(new Flywaydb());
 
 //        AccountSynJob.class, SynNodeSynJob.class,/
-        use(new Quartz( AccountSynJob.class,SynNodeSynJob.class,BlockSynJob.class ));
+        use(new Quartz(FullNodeBlockSynJob.class));
 
 
         onStart(registry -> {

@@ -26,7 +26,7 @@ public class SynNodeSynJob {
 	}
 
 
-	@Scheduled("10s")
+//	@Scheduled("10s")
 	public void ping() {
 		this.dslContext.insertInto(SyncNode.SYNC_NODE)
 		.set(SyncNode.SYNC_NODE.NODE_ID, this.config.getNodeId())

@@ -26,7 +26,7 @@ public class AccountSynJob {
 		this.config = config;
 	}
 
-	@Scheduled("50ms")
+//	@Scheduled("50ms")
 	public void syncAccount() throws ServiceException {
 
 		if (!this.config.isAccountJobEnabled()) {
@@ -48,7 +48,7 @@ public class AccountSynJob {
 //
 //	}
 
-	@Scheduled("100ms")
+//	@Scheduled("100ms")
 	public void syncAccountResync() throws ServiceException {
 
 		if (!this.config.isAccountJobEnabled()) {
@@ -60,7 +60,7 @@ public class AccountSynJob {
 	}
 
 
-    @Scheduled("1000ms")
+//    @Scheduled("1000ms")
     public void checkUtxo() throws ServiceException {
 
         this.synAccount.syncAccountResync();
