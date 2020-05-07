@@ -6,12 +6,12 @@ DROP TABLE IF EXISTS `account`;
 CREATE TABLE `account` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `address` varchar(200) NOT NULL,
-  `balance` double unsigned NOT NULL DEFAULT '0',
+  `balance` decimal(65,30) NOT NULL DEFAULT '0',
   `created_time` timestamp  DEFAULT CURRENT_TIMESTAMP,
   `updated_time` timestamp  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `tx_count` int(11) NOT NULL DEFAULT '0',
-  `total_input` double DEFAULT NULL,
-  `total_output` double DEFAULT NULL,
+  `total_input` decimal(65,30) DEFAULT NULL,
+  `total_output` decimal(65,30) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `account_address_unique` (`address`),
   KEY `account_address_index` (`address`)

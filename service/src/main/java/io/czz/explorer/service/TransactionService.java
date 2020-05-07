@@ -12,10 +12,7 @@ import io.czz.explorer.dto.transaction.*;
 import io.czz.explorer.model.tables.pojos.Block;
 import io.czz.explorer.model.tables.pojos.Transaction;
 import io.czz.explorer.model.tables.pojos.TransferIn;
-import io.czz.explorer.model.tables.records.TransactionRecord;
-import io.czz.explorer.model.tables.records.TransferInRecord;
-import io.czz.explorer.model.tables.records.TransferOutRecord;
-import io.czz.explorer.model.tables.records.TransferUtxoRecord;
+import io.czz.explorer.model.tables.records.*;
 import io.czz.explorer.utils.HexToStringUtil;
 import io.czz.explorer.utils.HttpUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -296,7 +293,7 @@ public class TransactionService {
         }
 
         logger.info("trans is {} :" + transactionDTO.getTxid());
-//
+
         Timestamp timestamp = Timestamp.valueOf(DateFormatUtils.format(transactionDTO.getTime().longValue() * 1000, "yyyy-MM-dd HH:mm:ss"));
         Timestamp blocktimestamp = Timestamp.valueOf(DateFormatUtils.format(transactionDTO.getBlocktime().longValue() * 1000, "yyyy-MM-dd HH:mm:ss"));
         TransactionRecord txRecord = this.dslContext.insertInto(TRANSACTION)
@@ -319,6 +316,9 @@ public class TransactionService {
         List<VInDTO> vInDTOS = transactionDTO.getVin();
         List<VOutDTO> vOutDTOS = transactionDTO.getVout();
 
+        Map<String,Double> addressAmount = new HashMap<>();
+        Map<String,Double> addressAmountIn = new HashMap<>();
+        Map<String,Double> addressAmountOut = new HashMap<>();
 
 
         //矿工地址
@@ -359,11 +359,8 @@ public class TransactionService {
                         .returning()
                         .fetchOne();
 
-
                 transferInRecords.add(transferInRecord);
             }
-
-
         }
 
 //        logger.info(" update utxo start: {}" ,DateFormatUtils.format(System.currentTimeMillis(),"yyyy-MM-dd HH:mm:ss"));
@@ -384,9 +381,17 @@ public class TransactionService {
                             .set(TRANSFER_IN.AMOUNT, transferOutRecords.get(transferInRecord.getVout()).getAmount())
                             .where(TRANSFER_IN.ID.eq(transferInRecord.getId()))
                             .execute();
+
                     totalInput = totalInput.add(new BigDecimal(transferOutRecords.get(transferInRecord.getVout()).getAmount()));
                     vInAddress.add(transferOutRecords.get(transferInRecord.getVout()).getAddress());
-                    synAccount(transferOutRecords.get(transferInRecord.getVout()).getAddress());
+
+                    String address = transferOutRecords.get(transferInRecord.getVout()).getAddress();
+                    double amount = transferOutRecords.get(transferInRecord.getVout()).getAmount();
+                    double amount1 = addressAmount.get(address) == null ? 0 : addressAmount.get(address);
+                    double amount2 = addressAmountIn.get(address) == null ? 0 : addressAmountIn.get(address);
+
+                    addressAmount.put(address, amount1 - amount);
+                    addressAmountIn.put(address, amount2 + amount);
                 }
 
                 //删除对应UTXO
@@ -405,15 +410,18 @@ public class TransactionService {
         int utxoStatus  = 1;
         for (VOutDTO vOutDTO : vOutDTOS) {
 
-//            if (vOutDTO.getValue().compareTo(maxValue) == 1) {
-//                maxValue = vOutDTO.getValue();
-//            }
-
             String address = null;
             Integer reqsigs = 0;
             if (vOutDTO.getScriptPubKey().getAddresses() != null) {
+                // 计算out的个数
                 address = vOutDTO.getScriptPubKey().getAddresses().get(0);
-                synAccount(address);
+                double amount = vOutDTO.getValue().doubleValue();
+                double amount1 = addressAmount.get(address) == null ? 0 : addressAmount.get(address);
+                double amount2 = addressAmountOut.get(address) == null ? 0 : addressAmountOut.get(address);
+
+                addressAmount.put(address, amount1 + amount);
+                addressAmountOut.put(address,amount2 + amount);
+
                 this.dslContext.update(ACCOUNT)
                         .set(ACCOUNT.TX_COUNT, ACCOUNT.TX_COUNT.add(1))
                         .where(ACCOUNT.ADDRESS.eq(address))
@@ -453,15 +461,38 @@ public class TransactionService {
                     .execute();
         }
 
+        // 地址余额
+        for (String k:addressAmount.keySet()) {
+            createOrUpdateAccount(k,addressAmount.get(k));
 
+            AccountRecord record = this.dslContext.select(ACCOUNT.ID,ACCOUNT.TOTAL_INPUT,ACCOUNT.TOTAL_OUTPUT)
+                    .from(ACCOUNT).where(ACCOUNT.ADDRESS.eq(k)).fetchOneInto(AccountRecord.class);
 
-        //更新交易信息,总输入,总输出,手续费
+            double TotalInput = record.getTotalInput() == null ? 0 : record.getTotalInput();
+            double TotalOutput = record.getTotalOutput() == null ? 0 : record.getTotalOutput();
+
+            if (addressAmountIn.get(k) != null) {
+                this.dslContext.update(ACCOUNT)
+                        .set(ACCOUNT.TOTAL_INPUT, TotalInput + addressAmountIn.get(k))
+                        .where(ACCOUNT.ID.eq(record.getId()))
+                        .execute();
+            }
+            if (addressAmountOut.get(k) != null) {
+                this.dslContext.update(ACCOUNT)
+                        .set(ACCOUNT.TOTAL_OUTPUT, TotalOutput + addressAmountOut.get(k))
+                        .where(ACCOUNT.ID.eq(record.getId()))
+                        .execute();
+            }
+        }
+
+        // 更新交易信息,总输入,总输出,手续费
         BigDecimal transFees = new BigDecimal(0);
         if (totalInput.compareTo(BigDecimal.ZERO) == 1) {
             if(totalInput.compareTo(totalOutput) ==1 ) {
                 transFees = totalInput.subtract(totalOutput);
             }
         }
+
 //        logger.info("totalInput is :" + totalInput + " totalOuput is :" + totalOutput);
         this.dslContext.update(TRANSACTION)
                 .set(TRANSACTION.TOTAL_INPUT, totalInput.doubleValue())
@@ -484,6 +515,37 @@ public class TransactionService {
         return map;
 
     }
+
+
+    public void createOrUpdateAccount(String address,Double amount) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
+        AccountRecord record = this.dslContext.select(ACCOUNT.ID,ACCOUNT.BALANCE)
+                .from(ACCOUNT).where(ACCOUNT.ADDRESS.eq(address)).fetchOneInto(AccountRecord.class);
+
+        // Create it if it doesn't exists yet
+        if (record == null) {
+            logger.info("create account");
+            this.dslContext.insertInto(ACCOUNT)
+                    .set(ACCOUNT.ADDRESS, address)
+                    .set(ACCOUNT.BALANCE, amount)
+                    .set(ACCOUNT.CREATED_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                    .execute();
+
+        } else {
+            logger.info("update account: " + address+" amount:"+amount +"  record.getBalance():" + record.getBalance().doubleValue());
+
+            //Update if exists
+            this.dslContext.update(ACCOUNT)
+                    .set(ACCOUNT.BALANCE, record.getBalance() + amount)
+                    .where(ACCOUNT.ID.eq(record.getId()))
+                    .execute();
+
+        }
+    }
+
+
+
 
     public void synAccount(String address)
     {
