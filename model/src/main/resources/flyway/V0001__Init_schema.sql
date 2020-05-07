@@ -44,6 +44,7 @@ CREATE TABLE `block` (
   `bits` bigint(20) unsigned DEFAULT NULL,
   `confirmations` int(11) NOT NULL DEFAULT '0',
   `reward` double unsigned NOT NULL DEFAULT '0',
+  `is_main` int(2) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   UNIQUE KEY `height_UNIQUE` (`height`),
   KEY `block_height_index` (`height`),

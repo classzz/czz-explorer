@@ -10,10 +10,7 @@ import io.czz.explorer.dto.ListResult;
 import io.czz.explorer.dto.account.AccountCriteria;
 import io.czz.explorer.dto.account.Accountdto;
 import io.czz.explorer.dto.block.BlockDTO;
-import io.czz.explorer.dto.transaction.TransferModel;
-import io.czz.explorer.dto.transaction.TransferUTXOCriteria;
-import io.czz.explorer.dto.transaction.TransferUtxoDTO;
-import io.czz.explorer.dto.transaction.UTXODTO;
+import io.czz.explorer.dto.transaction.*;
 import io.czz.explorer.model.tables.pojos.Transaction;
 import io.czz.explorer.model.tables.pojos.TransferIn;
 import io.czz.explorer.model.tables.records.AccountRecord;
@@ -124,6 +121,55 @@ public class AccountService {
 					.set(ACCOUNT.BALANCE, balance)
 					.set(ACCOUNT.TOTAL_INPUT,totalInput)
 					.set(ACCOUNT.TOTAL_OUTPUT,totalInput-balance)
+//					.set(ACCOUNT.TX_COUNT, DSL.select(DSL.count()).from(TRANSFER_OUT).where(TRANSFER_OUT.ADDRESS.eq(address)))
+					.where(ACCOUNT.ID.eq(record.getId()))
+					.execute();
+
+
+		}
+	}
+
+	public void createOrUpdateAccount(String address,Double amount) {
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
+		Double totalInput = this.dslContext.select(TRANSFER_UTXO.AMOUNT.sum()).from(TRANSFER_UTXO).where(TRANSFER_UTXO.ADDRESS.equal(address)).and(TRANSFER_UTXO.STATUS.notEqual(3)).and(TRANSFER_UTXO.AMOUNT.isNotNull()).fetchOneInto(Double.class);
+
+//		Double balance = result.get("balance");
+//		BigDecimal balance = new BigDecimal(totalInput.toString()).subtract(new BigDecimal(totalOutput.toString()));
+//		if(balance.compareTo(new BigDecimal(0)) != 1){
+//			balance = new BigDecimal(0);
+//			logger.info("address balance error ", address);
+//		}
+
+		if(totalInput ==  null){
+			totalInput = 0d;
+		}
+
+		AccountRecord record = this.dslContext.select(ACCOUNT.ID)
+				.from(ACCOUNT).where(ACCOUNT.ADDRESS.eq(address)).fetchOneInto(AccountRecord.class);
+
+		// Create it if it doesn't exists yet
+		if (record == null) {
+			logger.info("create account");
+			System.out.println("balance is" + amount);
+			record = this.dslContext.insertInto(ACCOUNT)
+//			.set(ACCOUNT.ACCOUNT_NAME,tronAccount.getAccountName().toStringUtf8())
+					.set(ACCOUNT.ADDRESS, address)
+					.set(ACCOUNT.BALANCE, amount)
+					.set(ACCOUNT.TOTAL_INPUT,totalInput)
+					.set(ACCOUNT.TOTAL_OUTPUT,totalInput-amount)
+					.set(ACCOUNT.CREATED_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+					.returning(ACCOUNT.ID)
+					.fetchOne();
+
+		} else {
+			logger.info("update account: " + address);
+
+			//Update if exists
+			this.dslContext.update(ACCOUNT)
+					.set(ACCOUNT.BALANCE, amount)
+					.set(ACCOUNT.TOTAL_INPUT,totalInput)
+					.set(ACCOUNT.TOTAL_OUTPUT,totalInput-amount)
 //					.set(ACCOUNT.TX_COUNT, DSL.select(DSL.count()).from(TRANSFER_OUT).where(TRANSFER_OUT.ADDRESS.eq(address)))
 					.where(ACCOUNT.ID.eq(record.getId()))
 					.execute();

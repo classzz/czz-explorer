@@ -64,7 +64,7 @@ public class SynNodeBlock {
 
         if (syncNode.getStartFullDate()!=null && syncNode.getEndFullDate()==null) {
             logger.info("=> Previous fullnode sync didn't seem to went well ... resyncing the batch ...");
-            Integer result =  syncFullNodeNodeBlocks();
+            Integer result = syncFullNodeNodeBlocks();
             if(result == 1 ){
                 return;
             }
@@ -131,9 +131,7 @@ public class SynNodeBlock {
         Long lastBlockNum = blockService.getlastNumber();
 
         logger.info("import block start {}", DateFormatUtils.format(System.currentTimeMillis(),"yyyy-MM-dd HH:mm:ss"));
-
         List<BlockDTO> blocks = blockService.getBlocks(start,stop);
-
 
         Collections.sort(blocks, (b1, b2)->{
             final int result = ComparisonChain.start().compare(b1.getHeight(), b2.getHeight()).result();
@@ -158,7 +156,6 @@ public class SynNodeBlock {
                     }
                 }
             }
-
 
             //孤块处理
             //1.从现在块往前遍历14个块,如果分叉则删除此块及后面的块
@@ -218,7 +215,86 @@ public class SynNodeBlock {
         return 0;
     }
 
+    public void syncFullBlocks() {
 
+        Long lastNodeBlockNum = blockService.getlastNumber();
+        logger.info("import block start {}", DateFormatUtils.format(System.currentTimeMillis(),"yyyy-MM-dd HH:mm:ss"));
+        Long lastBlockNum = this.dslContext.select(DSL.max(BLOCK.HEIGHT)).from(BLOCK).where(BLOCK.IS_MAIN.equal(1)).fetchOneInto(Long.class);
+
+        if (lastBlockNum==null) {
+            lastBlockNum= -1L;
+        }
+        // 处理每个区块
+        for (long i = lastBlockNum + 1 ; i < lastNodeBlockNum ;i++) {
+
+            BlockDTO block = blockService.getBlockByHeight(i);
+            logger.info("==> Syncing getBlockByHeight: {}", block.getHeight());
+
+            // 正常处理区块
+            int errcode = addBlock(block);
+
+            switch (errcode){
+                case 0:
+                    break;
+                case 1:
+                    removeOrphanBlock(block,lastBlockNum.intValue());
+            }
+
+        }
+    }
+
+    /**
+     * 处理区块
+     */
+    public Integer addBlock(BlockDTO block){
+
+        //检查上一块是否是主链
+        if(block.getHeight()>0) {
+            String prevBlockHash = this.dslContext.select(BLOCK.HASH).from(BLOCK).where(BLOCK.HEIGHT.equal(ULong.valueOf(block.getHeight() - 1))).and(BLOCK.IS_MAIN.equal(1)).fetchOneInto(String.class);
+            if (prevBlockHash == null || !prevBlockHash.equals(block.getPreviousblockhash())) {
+                return 1;
+            }
+        }
+
+        logger.info("==> Syncing block: {}",block.getHeight());
+        try {
+            this.blockService.importCzzBlock(block);
+        }catch(Exception e) {
+            logger.error("Could not import block {}",block.getHeight(),e);
+        }
+
+        return 0;
+    }
+
+    public void removeOrphanBlock(BlockDTO block,int lastBlockNum){
+
+        BlockDTO ancestorBlock = new BlockDTO();
+
+        // 计算祖先块
+        for (int i =block.getHeight();i >0; i--){
+            ancestorBlock = blockService.getBlockByHeight(Long.valueOf(i));
+            String prevBlockHash = this.dslContext.select(BLOCK.HASH).from(BLOCK).where(BLOCK.HEIGHT.equal(ULong.valueOf(block.getHeight() - 1))).and(BLOCK.IS_MAIN.equal(1)).fetchOneInto(String.class);
+            if (prevBlockHash == null || !prevBlockHash.equals(ancestorBlock.getPreviousblockhash())) {
+                continue;
+            }
+        }
+
+        for(Integer i = ancestorBlock.getHeight(); i<=lastBlockNum; i++){
+
+            logger.info("==> deal with orphan block, now is" + i);
+            Block orphanBlock = this.dslContext.select().from(BLOCK).where(BLOCK.HEIGHT.eq(ULong.valueOf(i))).fetchOneInto(Block.class);
+            this.dslContext.update(BLOCK).set(Tables.BLOCK.IS_MAIN,0).where(BLOCK.HASH.equal(orphanBlock.getHash())).execute();
+
+            //此处应为链上的hash,不对,应该是错误的hash
+            List<Transaction> transactions = this.dslContext.select().from(TRANSACTION).where(TRANSACTION.BLOCK_HASH.eq(orphanBlock.getHash())).fetchInto(Transaction.class);
+            for (Transaction transaction : transactions) {
+                this.dslContext.deleteFrom(TRANSACTION).where(TRANSACTION.HASH.eq(transaction.getHash())).execute();
+                this.dslContext.deleteFrom(TRANSFER_IN).where(TRANSFER_IN.TRANSACTION_ID.eq(transaction.getId())).execute();
+                this.dslContext.deleteFrom(TRANSFER_OUT).where(TRANSFER_OUT.TRANSACTION_ID.eq(transaction.getId())).execute();
+                this.dslContext.deleteFrom(TRANSFER_UTXO).where(TRANSFER_UTXO.TX_HASH.eq(transaction.getHash())).execute();
+            }
+        }
+    }
 
     public void deleteOrphanBlock(int start,int end,List<Integer> orphanBlocks){
 
@@ -261,9 +337,9 @@ public class SynNodeBlock {
 
     public void syncNodeFull(long currentBlockNum) throws ServiceException {
 
-        this.prepareFullNodeSync(currentBlockNum);
-        this.syncFullNodeNodeBlocks();
-
+//        this.prepareFullNodeSync(currentBlockNum);
+//        this.syncFullNodeNodeBlocks();
+        syncFullBlocks();
     }
 
     public boolean isInitialSync() {

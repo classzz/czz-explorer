@@ -180,6 +180,8 @@ public class BlockService {
     }
 
 
+
+
     public void addBLockHash(BlockRecord block){
 //        Timestamp timestamp = Timestamp.valueOf(DateFormatUtils.format(block.getCreatedTime(),"yyyy-MM-dd HH:mm:ss"));
 
@@ -253,6 +255,15 @@ public class BlockService {
         }
         return blocks;
     }
+
+
+    public BlockDTO getBlockByHeight(Long height) {
+            String blockHash = czzChainService.getBlockHash(height.intValue());
+            BlockDTO blockDTO = czzChainService.getBlock(blockHash);
+
+        return blockDTO;
+    }
+
 
     public Long getlastNumber() {
 

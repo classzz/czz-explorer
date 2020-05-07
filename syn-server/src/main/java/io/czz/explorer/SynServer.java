@@ -34,7 +34,7 @@ public class SynServer extends Jooby{
         use(new Flywaydb());
 
 //        AccountSynJob.class, SynNodeSynJob.class,/
-        use(new Quartz(FullNodeBlockSynJob.class));
+        use(new Quartz(FullNodeBlockSynJob.class, SynNodeSynJob.class));
 
 
         onStart(registry -> {
