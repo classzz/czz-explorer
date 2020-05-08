@@ -13,6 +13,7 @@ import io.czz.explorer.model.tables.pojos.Transaction;
 import io.czz.explorer.model.tables.records.BlockRecord;
 import io.czz.explorer.model.tables.records.TransactionRecord;
 import io.czz.explorer.service.BlockService;
+import io.czz.explorer.service.TransactionService;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -42,13 +43,15 @@ public class SynNodeBlock {
 
     private CzzChainService czzChainService;
 
+    private TransactionService txService;
 
     private static final Logger logger = LoggerFactory.getLogger(SynBlock.class);
 
     @Inject
-    public SynNodeBlock(DSLContext dslContext,SynServerConfig config,BlockService blockService,CzzChainService czzChainService) {
+    public SynNodeBlock(DSLContext dslContext,SynServerConfig config,BlockService blockService, TransactionService txService, CzzChainService czzChainService) {
         this.dslContext = dslContext;
         this.blockService = blockService;
+        this.txService = txService;
         this.czzChainService = czzChainService;
         this.config = config;
     }
@@ -217,7 +220,8 @@ public class SynNodeBlock {
 
     public void syncFullBlocks() {
 
-        Long lastNodeBlockNum = blockService.getlastNumber();
+//        Long lastNodeBlockNum = blockService.getlastNumber();
+        Long lastNodeBlockNum = 50l;
         logger.info("import block start {}", DateFormatUtils.format(System.currentTimeMillis(),"yyyy-MM-dd HH:mm:ss"));
         Long lastBlockNum = this.dslContext.select(DSL.max(BLOCK.HEIGHT)).from(BLOCK).where(BLOCK.IS_MAIN.equal(1)).fetchOneInto(Long.class);
 
@@ -288,8 +292,9 @@ public class SynNodeBlock {
             //此处应为链上的hash,不对,应该是错误的hash
             List<Transaction> transactions = this.dslContext.select().from(TRANSACTION).where(TRANSACTION.BLOCK_HASH.eq(orphanBlock.getHash())).fetchInto(Transaction.class);
             for (Transaction transaction : transactions) {
-                this.dslContext.deleteFrom(TRANSACTION).where(TRANSACTION.HASH.eq(transaction.getHash())).execute();
-                this.dslContext.deleteFrom(TRANSFER_IN).where(TRANSFER_IN.TRANSACTION_ID.eq(transaction.getId())).execute();
+                this.txService.removeTransaction(transaction);
+                this.dslContext.deleteFrom(Tables.TRANSACTION).where(Tables.TRANSACTION.HASH.eq(transaction.getHash())).execute();
+                this.dslContext.deleteFrom(Tables.TRANSFER_IN).where(Tables.TRANSFER_IN.TRANSACTION_ID.eq(transaction.getId())).execute();
                 this.dslContext.deleteFrom(TRANSFER_OUT).where(TRANSFER_OUT.TRANSACTION_ID.eq(transaction.getId())).execute();
                 this.dslContext.deleteFrom(TRANSFER_UTXO).where(TRANSFER_UTXO.TX_HASH.eq(transaction.getHash())).execute();
             }

@@ -9,6 +9,7 @@ import io.czz.explorer.constants.InbConstants;
 import io.czz.explorer.dto.*;
 import io.czz.explorer.dto.block.BlockDTO;
 import io.czz.explorer.dto.transaction.*;
+import io.czz.explorer.model.Tables;
 import io.czz.explorer.model.tables.pojos.Block;
 import io.czz.explorer.model.tables.pojos.Transaction;
 import io.czz.explorer.model.tables.pojos.TransferIn;
@@ -516,6 +517,121 @@ public class TransactionService {
 
     }
 
+
+    public Map removeTransaction(Transaction transaction) {
+
+        TransactionDTO transactionDTO = czzChainService.getTransaction(transaction.getHash());
+
+        if(transactionDTO!=null){
+            return new HashMap();
+        }
+
+        logger.info("trans is {} :" + transactionDTO.getTxid());
+
+        BigDecimal totalOutput = new BigDecimal("0");
+        //挖矿奖励为value中的最大值
+        BigDecimal maxValue = new BigDecimal(0);
+
+
+        List<VInDTO> vInDTOS = transactionDTO.getVin();
+        List<VOutDTO> vOutDTOS = transactionDTO.getVout();
+
+        Map<String,Double> addressAmount = new HashMap<>();
+        Map<String,Double> addressAmountIn = new HashMap<>();
+        Map<String,Double> addressAmountOut = new HashMap<>();
+
+
+        //矿工地址
+        String minerAddress = null;
+
+        //vIn中的地址
+        HashSet vInAddress = new HashSet();
+        //交易是挖矿或者普通交易
+        Integer coinBase = 0;
+
+        List<TransferInRecord> transferInRecords = new ArrayList<>(vInDTOS.size());
+        for (VInDTO vInDTO : vInDTOS) {
+            if (StringUtils.isNotBlank(vInDTO.getTxid())) {
+                TransferInRecord transferInRecord = this.dslContext.insertInto(TRANSFER_IN)
+                        .set(TRANSFER_IN.TRANSACTION_ID, transactionDTO.getId())
+                        .set(TRANSFER_IN.TRANSACTION_HASH, vInDTO.getTxid())
+                        .set(TRANSFER_IN.SEQUENCE, vInDTO.getSequence())
+                        .set(TRANSFER_IN.ASM, vInDTO.getScriptSig().getAsm())
+                        .set(TRANSFER_IN.HEX, vInDTO.getScriptSig().getHex())
+                        .set(TRANSFER_IN.VOUT, vInDTO.getVout())
+                        .returning()
+                        .fetchOne();
+                transferInRecords.add(transferInRecord);
+            }
+        }
+
+
+        if (!transferInRecords.isEmpty()) {
+            for (TransferInRecord transferInRecord : transferInRecords) {
+                //拿到对应的输出信息
+                TransactionRecord transactionRecord = this.dslContext.select().from(TRANSACTION).where(TRANSACTION.HASH.eq(transferInRecord.getTransactionHash())).fetchOneInto(TransactionRecord.class);
+                List<TransferOutRecord> transferOutRecords = this.dslContext.select().from(TRANSFER_OUT).where(TRANSFER_OUT.TRANSACTION_ID.eq(transactionRecord.getId())).orderBy(TRANSFER_OUT.ID.asc()).fetchInto(TransferOutRecord.class);
+                if (transferOutRecords.isEmpty()) {
+                    logger.info("transHash error is {}: " + transactionRecord.getHash());
+                    throw new NullPointerException("哇啦啦啦啦,出错拉");
+                }
+                if (!transferOutRecords.isEmpty()) {
+
+
+                    String address = transferOutRecords.get(transferInRecord.getVout()).getAddress();
+                    double amount = transferOutRecords.get(transferInRecord.getVout()).getAmount();
+                    double amount1 = addressAmount.get(address) == null ? 0 : addressAmount.get(address);
+                    double amount2 = addressAmountIn.get(address) == null ? 0 : addressAmountIn.get(address);
+
+                    addressAmount.put(address, amount1 - amount);
+                    addressAmountIn.put(address, amount2 + amount);
+                }
+
+            }
+        }
+
+        for (VOutDTO vOutDTO : vOutDTOS) {
+
+            if (vOutDTO.getScriptPubKey().getAddresses() != null) {
+                // 计算out的个数
+                String  address = vOutDTO.getScriptPubKey().getAddresses().get(0);
+                double amount = vOutDTO.getValue().doubleValue();
+                double amount1 = addressAmount.get(address) == null ? 0 : addressAmount.get(address);
+                double amount2 = addressAmountOut.get(address) == null ? 0 : addressAmountOut.get(address);
+
+                addressAmount.put(address, amount1 + amount);
+                addressAmountOut.put(address,amount2 + amount);
+
+            }
+        }
+
+        // 地址余额
+        for (String k:addressAmount.keySet()) {
+
+            createOrUpdateAccount(k,addressAmount.get(k) * -1);
+            AccountRecord record = this.dslContext.select(ACCOUNT.ID,ACCOUNT.TOTAL_INPUT,ACCOUNT.TOTAL_OUTPUT)
+                    .from(ACCOUNT).where(ACCOUNT.ADDRESS.eq(k)).fetchOneInto(AccountRecord.class);
+
+            double TotalInput = record.getTotalInput() == null ? 0 : record.getTotalInput();
+            double TotalOutput = record.getTotalOutput() == null ? 0 : record.getTotalOutput();
+
+            if (addressAmountIn.get(k) != null) {
+                this.dslContext.update(ACCOUNT)
+                        .set(ACCOUNT.TOTAL_INPUT, TotalInput - addressAmountIn.get(k))
+                        .where(ACCOUNT.ID.eq(record.getId()))
+                        .execute();
+            }
+            if (addressAmountOut.get(k) != null) {
+                this.dslContext.update(ACCOUNT)
+                        .set(ACCOUNT.TOTAL_OUTPUT, TotalOutput - addressAmountOut.get(k))
+                        .where(ACCOUNT.ID.eq(record.getId()))
+                        .execute();
+            }
+        }
+
+        return null;
+
+    }
 
     public void createOrUpdateAccount(String address,Double amount) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
