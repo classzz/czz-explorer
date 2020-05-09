@@ -266,8 +266,6 @@ public class BlockService {
 
 
     public Long getlastNumber() {
-
-
         Long blockNumber = 0L;
         blockNumber = czzChainService.getBlockHeight().longValue();
         return blockNumber;

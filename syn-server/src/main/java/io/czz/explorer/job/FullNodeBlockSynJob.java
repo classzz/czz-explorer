@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 @Singleton
 @DisallowConcurrentExecution
 public class FullNodeBlockSynJob {
+    private static boolean IS_STATE;
+
     private SynNodeBlock synNodeBlock;
     private BlockService blockService;
     private SynServerConfig config;
@@ -30,19 +32,23 @@ public class FullNodeBlockSynJob {
     @Scheduled("10000ms")
     public void syncFullNodeBlocks() throws ServiceException {
 
-        if (!this.config.isBlockJobEnabled()) {
+        if (!this.config.isBlockJobEnabled() ||IS_STATE) {
             return;
         }
+        IS_STATE = true;
+        try {
+            Long lastBlockNum = blockService.getlastNumber();
+            logger.info("current full node block:"+lastBlockNum);
 
-        Long lastBlockNum = blockService.getlastNumber();
-        logger.info("current full node block:"+lastBlockNum);
+            if (this.synNodeBlock.isInitialSync()) {
+                logger.info("Initial import ... that might take a moment, grab a coffe ...");
+            }
+            this.synNodeBlock.syncNodeFull();
 
-        if (this.synNodeBlock.isInitialSync()) {
-            logger.info("Initial import ... that might take a moment, grab a coffe ...");
+        }catch (RuntimeException e){
+            logger.error(e.toString());
         }
-
-        this.synNodeBlock.syncNodeFull(lastBlockNum);
-
+        IS_STATE = false;
     }
 
 

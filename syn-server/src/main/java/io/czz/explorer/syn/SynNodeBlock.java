@@ -228,8 +228,19 @@ public class SynNodeBlock {
         if (lastBlockNum==null) {
             lastBlockNum= -1L;
         }
+
+        if (lastNodeBlockNum == lastBlockNum){
+            BlockDTO block = blockService.getBlockByHeight(lastBlockNum);
+            //检查上一块是否是主链
+            String prevBlockHash = this.dslContext.select(BLOCK.HASH).from(BLOCK).where(BLOCK.HEIGHT.equal(ULong.valueOf(lastNodeBlockNum - 1))).and(BLOCK.IS_MAIN.equal(1)).fetchOneInto(String.class);
+            if (prevBlockHash == null || !prevBlockHash.equals(block.getPreviousblockhash())) {
+                removeOrphanBlock(block,lastBlockNum.intValue());
+                return;
+            }
+        }
+
         // 处理每个区块
-        for (long i = lastBlockNum + 1 ; i < lastNodeBlockNum ;i++) {
+        for (long i = lastBlockNum +1 ; i <= lastNodeBlockNum ;i++) {
 
             BlockDTO block = blockService.getBlockByHeight(i);
             logger.info("==> Syncing getBlockByHeight: {}", block.getHeight());
@@ -275,7 +286,7 @@ public class SynNodeBlock {
         BlockDTO ancestorBlock = new BlockDTO();
 
         // 计算祖先块
-        for (int i =block.getHeight();i >0; i--){
+        for (int i =block.getHeight();i >=0; i--){
             ancestorBlock = blockService.getBlockByHeight(Long.valueOf(i));
             String prevBlockHash = this.dslContext.select(BLOCK.HASH).from(BLOCK).where(BLOCK.HEIGHT.equal(ULong.valueOf(block.getHeight() - 1))).and(BLOCK.IS_MAIN.equal(1)).fetchOneInto(String.class);
             if (prevBlockHash == null || !prevBlockHash.equals(ancestorBlock.getPreviousblockhash())) {
@@ -283,11 +294,10 @@ public class SynNodeBlock {
             }
         }
 
-        for(Integer i = ancestorBlock.getHeight(); i<=lastBlockNum; i++){
+        for(Integer i = lastBlockNum; i >= ancestorBlock.getHeight(); i--){
 
             logger.info("==> deal with orphan block, now is" + i);
             Block orphanBlock = this.dslContext.select().from(BLOCK).where(BLOCK.HEIGHT.eq(ULong.valueOf(i))).fetchOneInto(Block.class);
-            this.dslContext.update(BLOCK).set(Tables.BLOCK.IS_MAIN,0).where(BLOCK.HASH.equal(orphanBlock.getHash())).execute();
 
             //此处应为链上的hash,不对,应该是错误的hash
             List<Transaction> transactions = this.dslContext.select().from(TRANSACTION).where(TRANSACTION.BLOCK_HASH.eq(orphanBlock.getHash())).fetchInto(Transaction.class);
@@ -297,6 +307,7 @@ public class SynNodeBlock {
                 this.dslContext.deleteFrom(Tables.TRANSFER_IN).where(Tables.TRANSFER_IN.TRANSACTION_ID.eq(transaction.getId())).execute();
                 this.dslContext.deleteFrom(TRANSFER_OUT).where(TRANSFER_OUT.TRANSACTION_ID.eq(transaction.getId())).execute();
                 this.dslContext.deleteFrom(TRANSFER_UTXO).where(TRANSFER_UTXO.TX_HASH.eq(transaction.getHash())).execute();
+                this.dslContext.deleteFrom(BLOCK).where(BLOCK.HASH.equal(orphanBlock.getHash())).execute();
             }
         }
     }
@@ -340,7 +351,7 @@ public class SynNodeBlock {
                 .execute();
     }
 
-    public void syncNodeFull(long currentBlockNum) throws ServiceException {
+    public void syncNodeFull() throws ServiceException {
 
 //        this.prepareFullNodeSync(currentBlockNum);
 //        this.syncFullNodeNodeBlocks();
