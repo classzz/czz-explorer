@@ -318,9 +318,9 @@ public class TransactionService {
         List<VInDTO> vInDTOS = transactionDTO.getVin();
         List<VOutDTO> vOutDTOS = transactionDTO.getVout();
 
-        Map<String,Double> addressAmount = new HashMap<>();
-        Map<String,Double> addressAmountIn = new HashMap<>();
-        Map<String,Double> addressAmountOut = new HashMap<>();
+        Map<String,BigDecimal> addressAmount = new HashMap<>();
+        Map<String,BigDecimal> addressAmountIn = new HashMap<>();
+        Map<String,BigDecimal> addressAmountOut = new HashMap<>();
 
 
         //矿工地址
@@ -388,12 +388,12 @@ public class TransactionService {
                     vInAddress.add(transferOutRecords.get(transferInRecord.getVout()).getAddress());
 
                     String address = transferOutRecords.get(transferInRecord.getVout()).getAddress();
-                    double amount = transferOutRecords.get(transferInRecord.getVout()).getAmount();
-                    double amount1 = addressAmount.get(address) == null ? 0 : addressAmount.get(address);
-                    double amount2 = addressAmountIn.get(address) == null ? 0 : addressAmountIn.get(address);
+                    BigDecimal amount = new BigDecimal(transferOutRecords.get(transferInRecord.getVout()).getAmount());
+                    BigDecimal amount1 = addressAmount.get(address) == null ? new BigDecimal(0) : addressAmount.get(address);
+                    BigDecimal amount2 = addressAmountIn.get(address) == null ? new BigDecimal(0) : addressAmountIn.get(address);
 
-                    addressAmount.put(address, amount1 - amount);
-                    addressAmountIn.put(address, amount2 + amount);
+                    addressAmount.put(address, amount1.subtract(amount));
+                    addressAmountIn.put(address, amount2.add(amount));
                 }
 
                 //删除对应UTXO
@@ -403,6 +403,7 @@ public class TransactionService {
 
             }
         }
+
 
 
         if(vOutDTOS.size()>0){
@@ -417,12 +418,12 @@ public class TransactionService {
             if (vOutDTO.getScriptPubKey().getAddresses() != null) {
                 // 计算out的个数
                 address = vOutDTO.getScriptPubKey().getAddresses().get(0);
-                double amount = vOutDTO.getValue().doubleValue();
-                double amount1 = addressAmount.get(address) == null ? 0 : addressAmount.get(address);
-                double amount2 = addressAmountOut.get(address) == null ? 0 : addressAmountOut.get(address);
+                BigDecimal amount = vOutDTO.getValue();
+                BigDecimal amount1 = addressAmount.get(address) == null ? new BigDecimal(0) : addressAmount.get(address);
+                BigDecimal amount2 = addressAmountOut.get(address) == null ? new BigDecimal(0) : addressAmountOut.get(address);
 
-                addressAmount.put(address, amount1 + amount);
-                addressAmountOut.put(address,amount2 + amount);
+                addressAmount.put(address, amount1.add(amount));
+                addressAmountOut.put(address,amount2.add(amount));
 
                 this.dslContext.update(ACCOUNT)
                         .set(ACCOUNT.TX_COUNT, ACCOUNT.TX_COUNT.add(1))
@@ -470,18 +471,18 @@ public class TransactionService {
             AccountRecord record = this.dslContext.select(ACCOUNT.ID,ACCOUNT.TOTAL_INPUT,ACCOUNT.TOTAL_OUTPUT)
                     .from(ACCOUNT).where(ACCOUNT.ADDRESS.eq(k)).fetchOneInto(AccountRecord.class);
 
-            double TotalInput = record.getTotalInput() == null ? 0 : record.getTotalInput();
-            double TotalOutput = record.getTotalOutput() == null ? 0 : record.getTotalOutput();
+            BigDecimal TotalInput = record.getTotalInput() == null ? new BigDecimal(0) : new BigDecimal(record.getTotalInput());
+            BigDecimal TotalOutput = record.getTotalOutput() == null ? new BigDecimal(0) : new BigDecimal(record.getTotalOutput());
 
             if (addressAmountIn.get(k) != null) {
                 this.dslContext.update(ACCOUNT)
-                        .set(ACCOUNT.TOTAL_INPUT, TotalInput + addressAmountIn.get(k))
+                        .set(ACCOUNT.TOTAL_INPUT, TotalInput.subtract(addressAmountIn.get(k)).doubleValue())
                         .where(ACCOUNT.ID.eq(record.getId()))
                         .execute();
             }
             if (addressAmountOut.get(k) != null) {
                 this.dslContext.update(ACCOUNT)
-                        .set(ACCOUNT.TOTAL_OUTPUT, TotalOutput + addressAmountOut.get(k))
+                        .set(ACCOUNT.TOTAL_OUTPUT, TotalOutput.subtract(addressAmountOut.get(k)).doubleValue())
                         .where(ACCOUNT.ID.eq(record.getId()))
                         .execute();
             }
@@ -530,9 +531,9 @@ public class TransactionService {
 
         logger.info("trans is {} :" + transaction.getHash());
 
-        Map<String,Double> addressAmount = new HashMap<>();
-        Map<String,Double> addressAmountIn = new HashMap<>();
-        Map<String,Double> addressAmountOut = new HashMap<>();
+        Map<String,BigDecimal> addressAmount = new HashMap<>();
+        Map<String,BigDecimal> addressAmountIn = new HashMap<>();
+        Map<String,BigDecimal> addressAmountOut = new HashMap<>();
 
 
         for (TransferIn transferIn : transferIns) {
@@ -541,12 +542,12 @@ public class TransactionService {
 
             //拿到对应的输出信息
             String address = transferIn.getAddress();
-            double amount = transferIn.getAmount();
-            double amount1 = addressAmount.get(address) == null ? 0 : addressAmount.get(address);
-            double amount2 = addressAmountIn.get(address) == null ? 0 : addressAmountIn.get(address);
+            BigDecimal amount = new BigDecimal(transferIn.getAmount());
+            BigDecimal amount1 = addressAmount.get(address) == null ? new BigDecimal(0) : addressAmount.get(address);
+            BigDecimal amount2 = addressAmountIn.get(address) == null ? new BigDecimal(0) : addressAmountIn.get(address);
 
-            addressAmount.put(address, amount1 - amount);
-            addressAmountIn.put(address, amount2 + amount);
+            addressAmount.put(address, amount1.subtract(amount));
+            addressAmountIn.put(address, amount2.add(amount));
 
         }
 
@@ -556,34 +557,34 @@ public class TransactionService {
 
             // 计算out的个数
             String  address = transferOut.getAddress();
-            double amount = transferOut.getAmount();
-            double amount1 = addressAmount.get(address) == null ? 0 : addressAmount.get(address);
-            double amount2 = addressAmountOut.get(address) == null ? 0 : addressAmountOut.get(address);
+            BigDecimal amount = new BigDecimal(transferOut.getAmount());
+            BigDecimal amount1 = addressAmount.get(address) == null ? new BigDecimal(0) : addressAmount.get(address);
+            BigDecimal amount2 = addressAmountOut.get(address) == null ?  new BigDecimal(0)  : addressAmountOut.get(address);
 
-            addressAmount.put(address, amount1 + amount);
-            addressAmountOut.put(address,amount2 + amount);
+            addressAmount.put(address, amount1.add(amount));
+            addressAmountOut.put(address,amount2.add(amount));
 
         }
 
         // 地址余额
         for (String k:addressAmount.keySet()) {
 
-            createOrUpdateAccount(k,addressAmount.get(k) * -1);
+            createOrUpdateAccount(k,addressAmount.get(k).multiply(new BigDecimal(-1)));
             AccountRecord record = this.dslContext.select(ACCOUNT.ID,ACCOUNT.TOTAL_INPUT,ACCOUNT.TOTAL_OUTPUT)
                     .from(ACCOUNT).where(ACCOUNT.ADDRESS.eq(k)).fetchOneInto(AccountRecord.class);
 
-            double TotalInput = record.getTotalInput() == null ? 0 : record.getTotalInput();
-            double TotalOutput = record.getTotalOutput() == null ? 0 : record.getTotalOutput();
+            BigDecimal TotalInput = record.getTotalInput() == null ? new BigDecimal(0) : new BigDecimal(record.getTotalInput());
+            BigDecimal TotalOutput = record.getTotalOutput() == null ? new BigDecimal(0) : new BigDecimal(record.getTotalOutput());
 
             if (addressAmountIn.get(k) != null) {
                 this.dslContext.update(ACCOUNT)
-                        .set(ACCOUNT.TOTAL_INPUT, TotalInput - addressAmountIn.get(k))
+                        .set(ACCOUNT.TOTAL_INPUT, TotalInput.subtract(addressAmountIn.get(k)).doubleValue())
                         .where(ACCOUNT.ID.eq(record.getId()))
                         .execute();
             }
             if (addressAmountOut.get(k) != null) {
                 this.dslContext.update(ACCOUNT)
-                        .set(ACCOUNT.TOTAL_OUTPUT, TotalOutput - addressAmountOut.get(k))
+                        .set(ACCOUNT.TOTAL_OUTPUT, TotalOutput.subtract(addressAmountOut.get(k)).doubleValue())
                         .where(ACCOUNT.ID.eq(record.getId()))
                         .execute();
             }
@@ -593,7 +594,7 @@ public class TransactionService {
 
     }
 
-    public void createOrUpdateAccount(String address,Double amount) {
+    public void createOrUpdateAccount(String address,BigDecimal amount) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 
         AccountRecord record = this.dslContext.select(ACCOUNT.ID,ACCOUNT.BALANCE)
@@ -604,7 +605,7 @@ public class TransactionService {
             logger.info("create account");
             this.dslContext.insertInto(ACCOUNT)
                     .set(ACCOUNT.ADDRESS, address)
-                    .set(ACCOUNT.BALANCE, amount)
+                    .set(ACCOUNT.BALANCE, amount.doubleValue())
                     .set(ACCOUNT.CREATED_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
                     .execute();
 
@@ -613,7 +614,7 @@ public class TransactionService {
 
             //Update if exists
             this.dslContext.update(ACCOUNT)
-                    .set(ACCOUNT.BALANCE, record.getBalance() + amount)
+                    .set(ACCOUNT.BALANCE, record.getBalance() + amount.doubleValue())
                     .where(ACCOUNT.ID.eq(record.getId()))
                     .execute();
 

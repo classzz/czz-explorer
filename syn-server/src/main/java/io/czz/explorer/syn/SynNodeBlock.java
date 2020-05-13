@@ -220,10 +220,10 @@ public class SynNodeBlock {
 
     public void syncFullBlocks() {
 
-        Long lastNodeBlockNum = blockService.getlastNumber();
-//        Long lastNodeBlockNum = 50l;
+//        Long lastNodeBlockNum = blockService.getlastNumber();
+        Long lastNodeBlockNum = 120001l;
         logger.info("import block start {}", DateFormatUtils.format(System.currentTimeMillis(),"yyyy-MM-dd HH:mm:ss"));
-        Long lastBlockNum = this.dslContext.select(DSL.max(BLOCK.HEIGHT)).from(BLOCK).where(BLOCK.IS_MAIN.equal(1)).fetchOneInto(Long.class);
+        Long lastBlockNum = this.dslContext.select(DSL.max(BLOCK.HEIGHT)).from(BLOCK).fetchOneInto(Long.class);
 
         if (lastBlockNum==null) {
             lastBlockNum= -1L;
@@ -232,7 +232,7 @@ public class SynNodeBlock {
         if (lastNodeBlockNum == lastBlockNum){
             BlockDTO block = blockService.getBlockByHeight(lastBlockNum);
             //检查上一块是否是主链
-            String prevBlockHash = this.dslContext.select(BLOCK.HASH).from(BLOCK).where(BLOCK.HEIGHT.equal(ULong.valueOf(lastNodeBlockNum - 1))).and(BLOCK.IS_MAIN.equal(1)).fetchOneInto(String.class);
+            String prevBlockHash = this.dslContext.select(BLOCK.HASH).from(BLOCK).where(BLOCK.HEIGHT.equal(ULong.valueOf(lastNodeBlockNum - 1))).fetchOneInto(String.class);
             if (prevBlockHash == null || !prevBlockHash.equals(block.getPreviousblockhash())) {
                 removeOrphanBlock(block,lastBlockNum.intValue());
                 return;
@@ -265,7 +265,7 @@ public class SynNodeBlock {
 
         //检查上一块是否是主链
         if(block.getHeight()>0) {
-            String prevBlockHash = this.dslContext.select(BLOCK.HASH).from(BLOCK).where(BLOCK.HEIGHT.equal(ULong.valueOf(block.getHeight() - 1))).and(BLOCK.IS_MAIN.equal(1)).fetchOneInto(String.class);
+            String prevBlockHash = this.dslContext.select(BLOCK.HASH).from(BLOCK).where(BLOCK.HEIGHT.equal(ULong.valueOf(block.getHeight() - 1))).fetchOneInto(String.class);
             if (prevBlockHash == null || !prevBlockHash.equals(block.getPreviousblockhash())) {
                 return 1;
             }
@@ -288,10 +288,11 @@ public class SynNodeBlock {
         // 计算祖先块
         for (int i =block.getHeight();i >=0; i--){
             ancestorBlock = blockService.getBlockByHeight(Long.valueOf(i));
-            String prevBlockHash = this.dslContext.select(BLOCK.HASH).from(BLOCK).where(BLOCK.HEIGHT.equal(ULong.valueOf(block.getHeight() - 1))).and(BLOCK.IS_MAIN.equal(1)).fetchOneInto(String.class);
+            String prevBlockHash = this.dslContext.select(BLOCK.HASH).from(BLOCK).where(BLOCK.HEIGHT.equal(ULong.valueOf(ancestorBlock.getHeight() - 1))).fetchOneInto(String.class);
             if (prevBlockHash == null || !prevBlockHash.equals(ancestorBlock.getPreviousblockhash())) {
                 continue;
             }
+            break;
         }
 
         for(Integer i = lastBlockNum; i >= ancestorBlock.getHeight(); i--){
