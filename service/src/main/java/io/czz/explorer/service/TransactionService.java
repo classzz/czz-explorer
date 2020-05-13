@@ -476,13 +476,13 @@ public class TransactionService {
 
             if (addressAmountIn.get(k) != null) {
                 this.dslContext.update(ACCOUNT)
-                        .set(ACCOUNT.TOTAL_INPUT, TotalInput.subtract(addressAmountIn.get(k)).doubleValue())
+                        .set(ACCOUNT.TOTAL_INPUT, TotalInput.add(addressAmountIn.get(k)).doubleValue())
                         .where(ACCOUNT.ID.eq(record.getId()))
                         .execute();
             }
             if (addressAmountOut.get(k) != null) {
                 this.dslContext.update(ACCOUNT)
-                        .set(ACCOUNT.TOTAL_OUTPUT, TotalOutput.subtract(addressAmountOut.get(k)).doubleValue())
+                        .set(ACCOUNT.TOTAL_OUTPUT, TotalOutput.add(addressAmountOut.get(k)).doubleValue())
                         .where(ACCOUNT.ID.eq(record.getId()))
                         .execute();
             }
