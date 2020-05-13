@@ -220,8 +220,8 @@ public class SynNodeBlock {
 
     public void syncFullBlocks() {
 
-//        Long lastNodeBlockNum = blockService.getlastNumber();
-        Long lastNodeBlockNum = 120001l;
+        Long lastNodeBlockNum = blockService.getlastNumber();
+//        Long lastNodeBlockNum = 120001l;
         logger.info("import block start {}", DateFormatUtils.format(System.currentTimeMillis(),"yyyy-MM-dd HH:mm:ss"));
         Long lastBlockNum = this.dslContext.select(DSL.max(BLOCK.HEIGHT)).from(BLOCK).fetchOneInto(Long.class);
 
