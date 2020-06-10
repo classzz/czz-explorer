@@ -82,14 +82,14 @@ public class HttpService {
 //         String param = "{\"jsonrpc\":\"2.0\", \"method\":\"getrawtransaction\",\"params\":[\"7f3dc96d40480b5ba6b469e19e92886ff9f4759f37dc75f068f0f8e1d3bd389b\",1],\"id\":67}";
 //         String param = "{\"jsonrpc\":\"2.0\", \"method\":\"getblockcount\",\"params\":[],\"id\":67}";
 //         String param = "{\"jsonrpc\":\"2.0\", \"method\":\"searchrawtransactions\",\"params\":[\"cq82h4d6h5544axwkq30lv03aegg3073fuucp5t543\",1,0,5000],\"id\":67}";
-         String result = HttpUtil.doPost(InbConstants.URL, param);
-         JSONObject object = (JSONObject)JSONObject.parse(result);
-         Integer nonce = Integer.valueOf(object.getJSONObject("result").get("Nonce").toString());
-         String mortgagteINB = object.getJSONObject("result").getJSONObject("Resources").getJSONObject("NET").get("MortgagteINB").toString();
-         String binwith =  object.getJSONObject("result").getJSONObject("Resources").getJSONObject("NET").get("Used").toString();
-         BigInteger balance  = object.getJSONObject("result").getBigInteger("Balance");
-         Double balance2 = balance.doubleValue();
-         System.out.println(balance);
+//         String result = HttpUtil.doPost(InbConstants.URL, param);
+//         JSONObject object = (JSONObject)JSONObject.parse(result);
+//         Integer nonce = Integer.valueOf(object.getJSONObject("result").get("Nonce").toString());
+//         String mortgagteINB = object.getJSONObject("result").getJSONObject("Resources").getJSONObject("NET").get("MortgagteINB").toString();
+//         String binwith =  object.getJSONObject("result").getJSONObject("Resources").getJSONObject("NET").get("Used").toString();
+//         BigInteger balance  = object.getJSONObject("result").getBigInteger("Balance");
+//         Double balance2 = balance.doubleValue();
+//         System.out.println(balance);
 
 //
 //        String param1 = "{\"jsonrpc\":\"2.0\", \"method\":\"eth_getBlockByNumber\",\"params\":[\"0x187\",true],\"id\":67}";
@@ -163,10 +163,10 @@ public class HttpService {
 
 
 
-        File f  = new File("/home/xingkong/block/inb-explorer-web");
-        String type = ".java";//查找什么类型的代码，如".java"就是查找以java开发的代码量，".php"就是查找以PHP开发的代码量
-        HttpService.treeFile(f,type);
-        System.out.println("zonghangshu" + allLines);
+//        File f  = new File("/home/xingkong/block/inb-explorer-web");
+//        String type = ".java";//查找什么类型的代码，如".java"就是查找以java开发的代码量，".php"就是查找以PHP开发的代码量
+//        HttpService.treeFile(f,type);
+//        System.out.println("zonghangshu" + allLines);
 
 
     }
