@@ -1,5 +1,8 @@
 package io.czz.explorer.utils;
 
+import hidden.org.sonatype.plexus.components.cipher.Base64;
+import io.czz.explorer.constants.InbConstants;
+
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -92,7 +95,15 @@ public class HttpUtil {
             // 设置传入参数的格式:请求参数应该是 name1=value1&name2=value2 的形式。
             connection.setRequestProperty("Content-Type", "application/json");
             // 设置鉴权信息：Authorization: Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0
-            connection.setRequestProperty("Authorization", "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0");
+//            connection.setRequestProperty("Authorization", "Bearer da3efcbf-0845-4fe3-8aba-ee040be542c0");
+
+            String auth = InbConstants.NODE_URL_USERNAME +":"+InbConstants.NODE_URL_PASSWD;
+            // Encrypt it
+            byte[] rel = Base64.encodeBase64(auth.getBytes());
+            String res = new String(rel);
+            // Set authentication properties
+            connection.setRequestProperty("Authorization","Basic " + res);
+
             // 通过连接对象获取一个输出流
             os = connection.getOutputStream();
             // 通过输出流对象将参数写出去/传输出去,它是通过字节数组写出的

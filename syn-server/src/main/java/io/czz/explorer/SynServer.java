@@ -2,8 +2,6 @@ package io.czz.explorer;
 
 
 
-import io.czz.explorer.job.AccountSynJob;
-import io.czz.explorer.job.BlockSynJob;
 import io.czz.explorer.job.FullNodeBlockSynJob;
 import io.czz.explorer.job.SynNodeSynJob;
 import org.jooby.Jooby;

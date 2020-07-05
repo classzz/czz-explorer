@@ -27,15 +27,15 @@ public class AccountSynJob {
 	}
 
 //	@Scheduled("50ms")
-	public void syncAccount() throws ServiceException {
-
-		if (!this.config.isAccountJobEnabled()) {
-			return;
-		}
-
-		this.synAccount.syncAccounts();
-
-	}
+//	public void syncAccount() throws ServiceException {
+//
+//		if (!this.config.isAccountJobEnabled()) {
+//			return;
+//		}
+//
+//		this.synAccount.syncAccounts();
+//
+//	}
 //
 //	@Scheduled("20ms")
 //	public void syncAccountVote() throws ServiceException {
@@ -49,34 +49,34 @@ public class AccountSynJob {
 //	}
 
 //	@Scheduled("100ms")
-	public void syncAccountResync() throws ServiceException {
-
-		if (!this.config.isAccountJobEnabled()) {
-			return;
-		}
-
-		this.synAccount.syncAccountResync();
-
-	}
+//	public void syncAccountResync() throws ServiceException {
+//
+//		if (!this.config.isAccountJobEnabled()) {
+//			return;
+//		}
+//
+//		this.synAccount.syncAccountResync();
+//
+//	}
 
 
 //    @Scheduled("1000ms")
-    public void checkUtxo() throws ServiceException {
-
-        this.synAccount.syncAccountResync();
-
-    }
+//    public void checkUtxo() throws ServiceException {
+//
+//        this.synAccount.syncAccountResync();
+//
+//    }
 
 //	@Scheduled("5m")
 //	public void removeLocks() {
 //		this.accountSyncService.removeLocks();
 //	}
 
-	public void syncGenesisAccounts() {
-		//TODO:
-		//Genesis accounts might be used without any transactions appearing on blockchain : for example block rewarding
-		// These accounts are updated here
-
-	}
+//	public void syncGenesisAccounts() {
+//		//TODO:
+//		//Genesis accounts might be used without any transactions appearing on blockchain : for example block rewarding
+//		// These accounts are updated here
+//
+//	}
 	
 }

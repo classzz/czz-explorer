@@ -107,7 +107,7 @@ public class BlockService {
 
             if(!map.isEmpty()) {
                 this.dslContext.update(BLOCK)
-                        .set(BLOCK.REWARD, reward)
+                        .set(BLOCK.REWARD,new BigDecimal(reward))
                         .set(BLOCK.MINER_ADDRESS, minerAddress)
                         .where(BLOCK.HASH.eq(block.getHash()))
                         .execute();
@@ -162,7 +162,7 @@ public class BlockService {
 
 
         this.dslContext.update(BLOCK)
-                .set(BLOCK.REWARD,reward)
+                .set(BLOCK.REWARD,new BigDecimal(reward))
                 .set(BLOCK.MINER_ADDRESS,minerAddress)
                 .where(BLOCK.HASH.eq(block.getHash()))
                 .execute();

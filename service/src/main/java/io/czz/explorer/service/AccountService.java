@@ -106,9 +106,9 @@ public class AccountService {
 			record = this.dslContext.insertInto(ACCOUNT)
 //			.set(ACCOUNT.ACCOUNT_NAME,tronAccount.getAccountName().toStringUtf8())
 					.set(ACCOUNT.ADDRESS, address)
-					.set(ACCOUNT.BALANCE, balance)
-					.set(ACCOUNT.TOTAL_INPUT,totalInput)
-					.set(ACCOUNT.TOTAL_OUTPUT,totalInput-balance)
+					.set(ACCOUNT.BALANCE, new BigDecimal(balance))
+					.set(ACCOUNT.TOTAL_INPUT,new BigDecimal(totalInput))
+					.set(ACCOUNT.TOTAL_OUTPUT,new BigDecimal(totalInput-balance))
 					.set(ACCOUNT.CREATED_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
 					.returning(ACCOUNT.ID)
 					.fetchOne();
@@ -118,9 +118,9 @@ public class AccountService {
 
 			//Update if exists
 			this.dslContext.update(ACCOUNT)
-					.set(ACCOUNT.BALANCE, balance)
-					.set(ACCOUNT.TOTAL_INPUT,totalInput)
-					.set(ACCOUNT.TOTAL_OUTPUT,totalInput-balance)
+					.set(ACCOUNT.BALANCE, new BigDecimal(balance))
+					.set(ACCOUNT.TOTAL_INPUT,new BigDecimal(totalInput))
+					.set(ACCOUNT.TOTAL_OUTPUT,new BigDecimal(totalInput-balance))
 //					.set(ACCOUNT.TX_COUNT, DSL.select(DSL.count()).from(TRANSFER_OUT).where(TRANSFER_OUT.ADDRESS.eq(address)))
 					.where(ACCOUNT.ID.eq(record.getId()))
 					.execute();
@@ -155,9 +155,9 @@ public class AccountService {
 			record = this.dslContext.insertInto(ACCOUNT)
 //			.set(ACCOUNT.ACCOUNT_NAME,tronAccount.getAccountName().toStringUtf8())
 					.set(ACCOUNT.ADDRESS, address)
-					.set(ACCOUNT.BALANCE, amount)
-					.set(ACCOUNT.TOTAL_INPUT,totalInput)
-					.set(ACCOUNT.TOTAL_OUTPUT,totalInput-amount)
+					.set(ACCOUNT.BALANCE, new BigDecimal(amount))
+					.set(ACCOUNT.TOTAL_INPUT, new BigDecimal(totalInput))
+					.set(ACCOUNT.TOTAL_OUTPUT,new BigDecimal(totalInput-amount))
 					.set(ACCOUNT.CREATED_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
 					.returning(ACCOUNT.ID)
 					.fetchOne();
@@ -167,9 +167,9 @@ public class AccountService {
 
 			//Update if exists
 			this.dslContext.update(ACCOUNT)
-					.set(ACCOUNT.BALANCE, amount)
-					.set(ACCOUNT.TOTAL_INPUT,totalInput)
-					.set(ACCOUNT.TOTAL_OUTPUT,totalInput-amount)
+					.set(ACCOUNT.BALANCE, new BigDecimal(amount))
+					.set(ACCOUNT.TOTAL_INPUT, new BigDecimal(totalInput))
+					.set(ACCOUNT.TOTAL_OUTPUT, new BigDecimal(totalInput-amount))
 //					.set(ACCOUNT.TX_COUNT, DSL.select(DSL.count()).from(TRANSFER_OUT).where(TRANSFER_OUT.ADDRESS.eq(address)))
 					.where(ACCOUNT.ID.eq(record.getId()))
 					.execute();

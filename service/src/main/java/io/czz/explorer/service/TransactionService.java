@@ -153,7 +153,7 @@ public class TransactionService {
                 transferOutDTO.setReqsigs(transferOutRecord.getReqsigs());
                 transferOutDTO.setType(transferOutRecord.getScriptPubkeyType());
                 vOutDTO.setScriptPubKey(transferOutDTO);
-                vOutDTO.setValue(new BigDecimal(transferOutRecord.getAmount()));
+                vOutDTO.setValue(transferOutRecord.getAmount());
                 vOutDTOS.add(vOutDTO);
             }
             transaction.setVin(vInDTOS);
@@ -384,11 +384,11 @@ public class TransactionService {
                             .where(TRANSFER_IN.ID.eq(transferInRecord.getId()))
                             .execute();
 
-                    totalInput = totalInput.add(new BigDecimal(transferOutRecords.get(transferInRecord.getVout()).getAmount()));
+                    totalInput = totalInput.add(transferOutRecords.get(transferInRecord.getVout()).getAmount());
                     vInAddress.add(transferOutRecords.get(transferInRecord.getVout()).getAddress());
 
                     String address = transferOutRecords.get(transferInRecord.getVout()).getAddress();
-                    BigDecimal amount = new BigDecimal(transferOutRecords.get(transferInRecord.getVout()).getAmount());
+                    BigDecimal amount = transferOutRecords.get(transferInRecord.getVout()).getAmount();
                     BigDecimal amount1 = addressAmount.get(address) == null ? new BigDecimal(0) : addressAmount.get(address);
                     BigDecimal amount2 = addressAmountIn.get(address) == null ? new BigDecimal(0) : addressAmountIn.get(address);
 
@@ -435,7 +435,7 @@ public class TransactionService {
             }
             TransferOutRecord transferOutRecord = this.dslContext.insertInto(TRANSFER_OUT)
                     .set(TRANSFER_OUT.TRANSACTION_ID, txRecord.getId())
-                    .set(TRANSFER_OUT.AMOUNT, vOutDTO.getValue().doubleValue())
+                    .set(TRANSFER_OUT.AMOUNT, new BigDecimal(vOutDTO.getValue().doubleValue()))
 //					.set(TRANSFER_OUT.TRANSACTION_INDEX, vOutDTO.get())
                     .set(TRANSFER_OUT.ADDRESS, address)
                     .set(TRANSFER_OUT.ASM, vOutDTO.getScriptPubKey().getAsm())
@@ -453,7 +453,7 @@ public class TransactionService {
             }
 
             this.dslContext.insertInto(TRANSFER_UTXO)
-                    .set(TRANSFER_UTXO.AMOUNT, vOutDTO.getValue().doubleValue())
+                    .set(TRANSFER_UTXO.AMOUNT, new BigDecimal(vOutDTO.getValue().doubleValue()))
                     .set(TRANSFER_UTXO.TX_HASH, txRecord.getHash())
                     .set(TRANSFER_UTXO.TRANSFER_OUT_ID, transferOutRecord.getId())
                     .set(TRANSFER_UTXO.ADDRESS, address)
@@ -471,18 +471,18 @@ public class TransactionService {
             AccountRecord record = this.dslContext.select(ACCOUNT.ID,ACCOUNT.TOTAL_INPUT,ACCOUNT.TOTAL_OUTPUT)
                     .from(ACCOUNT).where(ACCOUNT.ADDRESS.eq(k)).fetchOneInto(AccountRecord.class);
 
-            BigDecimal TotalInput = record.getTotalInput() == null ? new BigDecimal(0) : new BigDecimal(record.getTotalInput());
-            BigDecimal TotalOutput = record.getTotalOutput() == null ? new BigDecimal(0) : new BigDecimal(record.getTotalOutput());
+            BigDecimal TotalInput = record.getTotalInput() == null ? new BigDecimal(0) : record.getTotalInput();
+            BigDecimal TotalOutput = record.getTotalOutput() == null ? new BigDecimal(0) : record.getTotalOutput();
 
             if (addressAmountIn.get(k) != null) {
                 this.dslContext.update(ACCOUNT)
-                        .set(ACCOUNT.TOTAL_INPUT, TotalInput.add(addressAmountIn.get(k)).doubleValue())
+                        .set(ACCOUNT.TOTAL_INPUT, new BigDecimal(TotalInput.add(addressAmountIn.get(k)).doubleValue()))
                         .where(ACCOUNT.ID.eq(record.getId()))
                         .execute();
             }
             if (addressAmountOut.get(k) != null) {
                 this.dslContext.update(ACCOUNT)
-                        .set(ACCOUNT.TOTAL_OUTPUT, TotalOutput.add(addressAmountOut.get(k)).doubleValue())
+                        .set(ACCOUNT.TOTAL_OUTPUT, new BigDecimal(TotalOutput.add(addressAmountOut.get(k)).doubleValue()))
                         .where(ACCOUNT.ID.eq(record.getId()))
                         .execute();
             }
@@ -498,9 +498,9 @@ public class TransactionService {
 
 //        logger.info("totalInput is :" + totalInput + " totalOuput is :" + totalOutput);
         this.dslContext.update(TRANSACTION)
-                .set(TRANSACTION.TOTAL_INPUT, totalInput.doubleValue())
-                .set(TRANSACTION.TOTAL_OUTPUT, totalOutput.doubleValue())
-                .set(TRANSACTION.FEES, transFees.doubleValue())
+                .set(TRANSACTION.TOTAL_INPUT, new BigDecimal(totalInput.doubleValue()))
+                .set(TRANSACTION.TOTAL_OUTPUT, new BigDecimal(totalOutput.doubleValue()))
+                .set(TRANSACTION.FEES, new BigDecimal(transFees.doubleValue()))
                 .where(TRANSACTION.ID.eq(txRecord.getId()))
                 .execute();
 
@@ -542,7 +542,7 @@ public class TransactionService {
 
             //拿到对应的输出信息
             String address = transferIn.getAddress();
-            BigDecimal amount = new BigDecimal(transferIn.getAmount());
+            BigDecimal amount = transferIn.getAmount();
             BigDecimal amount1 = addressAmount.get(address) == null ? new BigDecimal(0) : addressAmount.get(address);
             BigDecimal amount2 = addressAmountIn.get(address) == null ? new BigDecimal(0) : addressAmountIn.get(address);
 
@@ -557,7 +557,7 @@ public class TransactionService {
 
             // 计算out的个数
             String  address = transferOut.getAddress();
-            BigDecimal amount = new BigDecimal(transferOut.getAmount());
+            BigDecimal amount = transferOut.getAmount();
             BigDecimal amount1 = addressAmount.get(address) == null ? new BigDecimal(0) : addressAmount.get(address);
             BigDecimal amount2 = addressAmountOut.get(address) == null ?  new BigDecimal(0)  : addressAmountOut.get(address);
 
@@ -573,18 +573,18 @@ public class TransactionService {
             AccountRecord record = this.dslContext.select(ACCOUNT.ID,ACCOUNT.TOTAL_INPUT,ACCOUNT.TOTAL_OUTPUT)
                     .from(ACCOUNT).where(ACCOUNT.ADDRESS.eq(k)).fetchOneInto(AccountRecord.class);
 
-            BigDecimal TotalInput = record.getTotalInput() == null ? new BigDecimal(0) : new BigDecimal(record.getTotalInput());
-            BigDecimal TotalOutput = record.getTotalOutput() == null ? new BigDecimal(0) : new BigDecimal(record.getTotalOutput());
+            BigDecimal TotalInput = record.getTotalInput() == null ? new BigDecimal(0) :record.getTotalInput();
+            BigDecimal TotalOutput = record.getTotalOutput() == null ? new BigDecimal(0) : record.getTotalOutput();
 
             if (addressAmountIn.get(k) != null) {
                 this.dslContext.update(ACCOUNT)
-                        .set(ACCOUNT.TOTAL_INPUT, TotalInput.subtract(addressAmountIn.get(k)).doubleValue())
+                        .set(ACCOUNT.TOTAL_INPUT, new BigDecimal(TotalInput.subtract(addressAmountIn.get(k)).doubleValue()))
                         .where(ACCOUNT.ID.eq(record.getId()))
                         .execute();
             }
             if (addressAmountOut.get(k) != null) {
                 this.dslContext.update(ACCOUNT)
-                        .set(ACCOUNT.TOTAL_OUTPUT, TotalOutput.subtract(addressAmountOut.get(k)).doubleValue())
+                        .set(ACCOUNT.TOTAL_OUTPUT, new BigDecimal(TotalOutput.subtract(addressAmountOut.get(k)).doubleValue()))
                         .where(ACCOUNT.ID.eq(record.getId()))
                         .execute();
             }
@@ -605,7 +605,7 @@ public class TransactionService {
             logger.info("create account");
             this.dslContext.insertInto(ACCOUNT)
                     .set(ACCOUNT.ADDRESS, address)
-                    .set(ACCOUNT.BALANCE, amount.doubleValue())
+                    .set(ACCOUNT.BALANCE, amount)
                     .set(ACCOUNT.CREATED_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
                     .execute();
 
@@ -614,7 +614,7 @@ public class TransactionService {
 
             //Update if exists
             this.dslContext.update(ACCOUNT)
-                    .set(ACCOUNT.BALANCE, record.getBalance() + amount.doubleValue())
+                    .set(ACCOUNT.BALANCE, record.getBalance().add(amount))
                     .where(ACCOUNT.ID.eq(record.getId()))
                     .execute();
 
@@ -672,7 +672,7 @@ public class TransactionService {
             }
             this.dslContext.update(BLOCK)
                     .set(BLOCK.MINER_ADDRESS,minerAddress)
-                    .set(BLOCK.REWARD,reward.doubleValue())
+                    .set(BLOCK.REWARD,reward)
                     .where(BLOCK.HEIGHT.equal(ULong.valueOf(i)))
                     .execute();
         }

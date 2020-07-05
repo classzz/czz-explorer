@@ -247,12 +247,12 @@ public class SynBlock {
                         .set(ORPHAN_BLOCK.MINER_ADDRESS, orphanBlock.getMinerAddress())
                         .set(ORPHAN_BLOCK.TX_COUNT, orphanBlock.getTxCount())
                         .set(ORPHAN_BLOCK.DIFFICULTY, orphanBlock.getDifficulty())
-                        .set(ORPHAN_BLOCK.TRANSACTION_FEES, orphanBlock.getTransactionFees())
+                        .set(ORPHAN_BLOCK.TRANSACTION_FEES, orphanBlock.getTransactionFees().doubleValue())
                         .set(ORPHAN_BLOCK.SIZE, orphanBlock.getSize())
                         .set(ORPHAN_BLOCK.NONCE, orphanBlock.getNonce())
                         .set(ORPHAN_BLOCK.BITS, orphanBlock.getBits())
                         .set(ORPHAN_BLOCK.CONFIRMATIONS, orphanBlock.getConfirmations())
-                        .set(ORPHAN_BLOCK.REWARD, orphanBlock.getReward())
+                        .set(ORPHAN_BLOCK.REWARD, orphanBlock.getReward().doubleValue())
                         .execute();
             }
         }

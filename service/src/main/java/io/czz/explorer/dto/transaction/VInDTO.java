@@ -1,5 +1,7 @@
 package io.czz.explorer.dto.transaction;
 
+import java.math.BigDecimal;
+
 public class VInDTO {
 
     private String coinbase;
@@ -12,7 +14,7 @@ public class VInDTO {
 
     private Long sequence;
 
-    private double value;
+    private BigDecimal value;
 
     private String address;
 
@@ -57,11 +59,11 @@ public class VInDTO {
         this.vout = vout;
     }
 
-    public double getValue() {
+    public BigDecimal getValue() {
         return value;
     }
 
-    public void setValue(double value) {
+    public void setValue(BigDecimal value) {
         this.value = value;
     }
 

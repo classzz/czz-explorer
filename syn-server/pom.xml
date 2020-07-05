@@ -50,6 +50,12 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.38</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.68</version>
+        </dependency>
 
         <!-- NETTY -->
         <dependency>
@@ -154,21 +160,27 @@
             <version>2.9.0</version>
         </dependency>
 
-
     </dependencies>
 
 
     <dependencyManagement>
+
         <dependencies>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>21.0</version>
-            </dependency>
+
             <dependency>
                 <groupId>com.github.User</groupId>
                 <artifactId>Repo</artifactId>
                 <version>Tag</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>23.6-jre</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>4.4.8</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -20,7 +20,7 @@ public class FullNodeBlockSynJob {
     private SynNodeBlock synNodeBlock;
     private BlockService blockService;
     private SynServerConfig config;
-    private static final Logger logger = LoggerFactory.getLogger(BlockSynJob.class);
+    private static final Logger logger = LoggerFactory.getLogger(FullNodeBlockSynJob.class);
 
     @Inject
     public FullNodeBlockSynJob(SynNodeBlock synNodeBlock, BlockService blockService, SynServerConfig config) {
@@ -29,7 +29,7 @@ public class FullNodeBlockSynJob {
         this.config = config;
     }
 
-    @Scheduled("10000ms")
+    @Scheduled("1000ms")
     public void syncFullNodeBlocks() throws ServiceException {
 
         if (!this.config.isBlockJobEnabled() ||IS_STATE) {

@@ -30,18 +30,6 @@ public class CzzChainService {
         this.dslContext = dslContext;
     }
 
-    public void getTransactionReceipt(String hash){
-
-        List<Object> params = new ArrayList<>();
-        params.add(hash);
-        String method = "eth_getTransactionReceipt";
-        JSONObject object = getResult(params,method);
-
-
-        String from = object.getJSONObject("result").getString("from");
-        String to = object.getJSONObject("result").getString("to");
-        String blockNumber = object.getJSONObject("result").getString("blockNumber");
-    }
 
     public JSONObject getResult(List<Object> params, String methodName){
 
