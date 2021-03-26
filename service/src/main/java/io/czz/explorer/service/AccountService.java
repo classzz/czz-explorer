@@ -385,8 +385,8 @@ public class AccountService {
 		return result;
 	}
 
-	public ListModel<DhVo, TransactionCriteria> transfersDh(TransactionCriteria criteria) {
-		List<DhVo> getconvertitems = czzChainService.getconvertitems();
+	public ListModel<DhVo, TransactionCriteria> transfersDh(TransactionCriteria criteria,String txhash) {
+		/*List<DhVo> getconvertitems = czzChainService.getconvertitems();
 		ListModel<DhVo, TransactionCriteria> result = new ListModel<DhVo, TransactionCriteria>(criteria,getconvertitems, getconvertitems.size());
 
 		for(DhVo vo : getconvertitems) {
@@ -427,6 +427,9 @@ public class AccountService {
 			}
 		}
 
+		return result;*/
+		List<DhVo> record = this.dslContext.select().from(CHANGE).where(CHANGE.TX_HASH.eq(txhash)).fetchInto(DhVo.class);
+		ListModel<DhVo,TransactionCriteria> result = new ListModel<DhVo,TransactionCriteria>(criteria, record, record.size());
 		return result;
 	}
 }

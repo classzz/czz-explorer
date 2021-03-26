@@ -4,13 +4,17 @@ import com.google.common.collect.ComparisonChain;
 import com.google.inject.Inject;
 import io.czz.explorer.SynServerConfig;
 import io.czz.explorer.chain.CzzChainService;
+import io.czz.explorer.dto.ListModel;
 import io.czz.explorer.dto.block.BlockDTO;
+import io.czz.explorer.dto.transaction.DhVo;
+import io.czz.explorer.dto.transaction.TransactionCriteria;
 import io.czz.explorer.exception.ServiceException;
 import io.czz.explorer.model.Tables;
 import io.czz.explorer.model.tables.pojos.Block;
 import io.czz.explorer.model.tables.pojos.SyncNode;
 import io.czz.explorer.model.tables.pojos.Transaction;
 import io.czz.explorer.model.tables.records.BlockRecord;
+import io.czz.explorer.model.tables.records.ChangeRecord;
 import io.czz.explorer.model.tables.records.TransactionRecord;
 import io.czz.explorer.service.BlockService;
 import io.czz.explorer.service.TransactionService;
@@ -22,12 +26,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
 import static io.czz.explorer.model.Tables.*;
 import static io.czz.explorer.model.Tables.ORPHAN_BLOCK;
 import static io.czz.explorer.model.tables.Block.BLOCK;
+import static io.czz.explorer.model.tables.Change.CHANGE;
 import static io.czz.explorer.model.tables.SyncNode.SYNC_NODE;
 import static io.czz.explorer.model.tables.TransferUtxo.TRANSFER_UTXO;
 
@@ -239,6 +245,7 @@ public class SynNodeBlock {
             }
         }
 
+
         // 处理每个区块
         for (long i = lastBlockNum +1 ; i <= lastNodeBlockNum ;i++) {
 
@@ -274,11 +281,56 @@ public class SynNodeBlock {
         logger.info("==> Syncing block: {}",block.getHeight());
         try {
             this.blockService.importCzzBlock(block);
+            change();
         }catch(Exception e) {
             logger.error("Could not import block {}",block.getHeight(),e);
         }
 
         return 0;
+    }
+
+    private void change(){
+        List<DhVo> getconvertitems = czzChainService.getconvertitems();
+        TransactionCriteria criteria = new TransactionCriteria();
+        ListModel<DhVo, TransactionCriteria> result = new ListModel<DhVo, TransactionCriteria>(criteria,getconvertitems, getconvertitems.size());
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        for(DhVo vo : getconvertitems) {
+            ChangeRecord record = this.dslContext.select().from(CHANGE).where(CHANGE.MID.eq(ULong.valueOf(vo.getMid()))).fetchOneInto(ChangeRecord.class);
+
+            if (record == null) {
+                logger.info("save change info");
+                record = this.dslContext.insertInto(CHANGE)
+                        .set(CHANGE.MID, ULong.valueOf(vo.getMid()))
+                        .set(CHANGE.AMOUNT, vo.getAmount())
+                        .set(CHANGE.ASSET_TYPE, vo.getAsset_type())
+                        .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
+                        .set(CHANGE.CONVERT_TYPE,vo.getConvert_type())
+                        .set(CHANGE.EXT_TX_HASH,vo.getExt_tx_hash())
+                        .set(CHANGE.TX_HASH,vo.getTx_hash())
+                        .set(CHANGE.FEE_AMOUNT,vo.getFee_amount())
+                        .set(CHANGE.PUB_KEY,vo.getPub_key())
+                        .set(CHANGE.TO_TOKEN,vo.getTo_token())
+                        .set(CHANGE.CREATED_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                        .returning(CHANGE.MID)
+                        .fetchOne();
+            }else {
+                logger.info("update change info: " + vo.getMid());
+                //Update if exists
+                this.dslContext.update(CHANGE)
+                        .set(CHANGE.AMOUNT, vo.getAmount())
+                        .set(CHANGE.ASSET_TYPE, vo.getAsset_type())
+                        .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
+                        .set(CHANGE.CONVERT_TYPE,vo.getConvert_type())
+                        .set(CHANGE.EXT_TX_HASH,vo.getExt_tx_hash())
+                        .set(CHANGE.FEE_AMOUNT,vo.getFee_amount())
+                        .set(CHANGE.TX_HASH,vo.getTx_hash())
+                        .set(CHANGE.PUB_KEY,vo.getPub_key())
+                        .set(CHANGE.TO_TOKEN,vo.getTo_token())
+                        .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                        .where(CHANGE.MID.eq(ULong.valueOf(vo.getMid())))
+                        .execute();
+            }
+        }
     }
 
     public void removeOrphanBlock(BlockDTO block,int lastBlockNum){
