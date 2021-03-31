@@ -13,8 +13,8 @@ import java.io.Serializable;
  */
 public class DhVo implements Serializable {
     private String mid;
-    private String asset_type;
-    private String convert_type;
+    private String asset_type;//classzz = 0 eth =1 heco = 2 bsc = 3
+    private String convert_type;//classzz = 0 eth =1 heco = 2 bsc = 3
     private String pub_key;
     private String ext_tx_hash;
     private String tx_hash;

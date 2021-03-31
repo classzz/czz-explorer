@@ -186,4 +186,13 @@ public class AccountRoutes {
 		criteria.setPage(page.orElse(1));
 		return this.accountService.transfersDh(criteria,txhash);
 	}
+
+	@GET
+	@Path(ApiAppRoutePaths.V1.TRANSACTION_DH_LIST)
+	public ListModel<DhVo, TransactionCriteria> transfersDhList(Optional<Integer> page, Optional<Integer> limit) {
+		TransactionCriteria criteria = new TransactionCriteria();
+		criteria.setLimit(limit.orElse(20));
+		criteria.setPage(page.orElse(1));
+		return this.accountService.transfersDhList(criteria);
+	}
 }

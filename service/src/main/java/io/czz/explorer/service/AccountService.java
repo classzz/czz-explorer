@@ -429,6 +429,35 @@ public class AccountService {
 
 		return result;*/
 		List<DhVo> record = this.dslContext.select().from(CHANGE).where(CHANGE.TX_HASH.eq(txhash)).fetchInto(DhVo.class);
+		//classzz = 0 eth =1 heco = 2 bsc = 3
+		record.forEach(a ->{
+			a.setAsset_type(change(a.getAsset_type()));
+			a.setConvert_type(change(a.getConvert_type()));
+		});
+		ListModel<DhVo,TransactionCriteria> result = new ListModel<DhVo,TransactionCriteria>(criteria, record, record.size());
+		return result;
+	}
+	private static String change(String type){
+		switch (type){
+			case "0" : return "CLassZZ";
+			case "1" : return "ETH";
+			case "2" : return "HECO";
+			case "3" : return "BSC";
+		}
+		return null;
+	}
+
+	public static void main(String[] args) {
+		System.out.println(change("3"));
+	}
+
+	public ListModel<DhVo, TransactionCriteria> transfersDhList(TransactionCriteria criteria) {
+		List<DhVo> record = this.dslContext.select().from(CHANGE).limit(criteria.getLimit()).offset(criteria.getPage()).fetchInto(DhVo.class);
+		//classzz = 0 eth =1 heco = 2 bsc = 3
+		record.forEach(a ->{
+			a.setAsset_type(change(a.getAsset_type()));
+			a.setConvert_type(change(a.getConvert_type()));
+		});
 		ListModel<DhVo,TransactionCriteria> result = new ListModel<DhVo,TransactionCriteria>(criteria, record, record.size());
 		return result;
 	}

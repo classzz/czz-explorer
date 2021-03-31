@@ -78,6 +78,7 @@ public interface ApiAppRoutePaths {
 		public static final String TRANSACTION_SEND = VERSION+"/transaction/send";
 		public static final String TRANSACTION_UTXO = VERSION+"/transactions/utxo";
 		String TRANSACTION_DH = VERSION+"/transactions/dh";
+		String TRANSACTION_DH_LIST = VERSION+"/transactions/dhlist";
 
 		
 	}
