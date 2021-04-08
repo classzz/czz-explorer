@@ -18,6 +18,7 @@ import io.czz.explorer.model.tables.records.ChangeRecord;
 import io.czz.explorer.model.tables.records.TransactionRecord;
 import io.czz.explorer.service.BlockService;
 import io.czz.explorer.service.TransactionService;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -326,6 +327,29 @@ public class SynNodeBlock {
                         .set(CHANGE.TX_HASH,vo.getTx_hash())
                         .set(CHANGE.PUB_KEY,vo.getPub_key())
                         .set(CHANGE.TO_TOKEN,vo.getTo_token())
+                        .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                        .where(CHANGE.MID.eq(ULong.valueOf(vo.getMid())))
+                        .execute();
+            }
+        }
+        setConfirm();
+    }
+
+    private void setConfirm() {
+        List<DhVo> getconvertitems = czzChainService.getconvertconfirmitems();
+        TransactionCriteria criteria = new TransactionCriteria();
+        ListModel<DhVo, TransactionCriteria> result = new ListModel<DhVo, TransactionCriteria>(criteria,getconvertitems, getconvertitems.size());
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        for(DhVo vo : getconvertitems) {
+            if(StringUtils.isBlank(vo.getConfirm_ext_tx_hash())){
+                continue;
+            }
+            ChangeRecord record = this.dslContext.select().from(CHANGE).where(CHANGE.MID.eq(ULong.valueOf(vo.getMid()))).fetchOneInto(ChangeRecord.class);
+            if (record != null) {
+                logger.info("update change info add confirm: " + vo.getMid());
+                //Update if exists
+                this.dslContext.update(CHANGE)
+                        .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
                         .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
                         .where(CHANGE.MID.eq(ULong.valueOf(vo.getMid())))
                         .execute();

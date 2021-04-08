@@ -104,4 +104,12 @@ public class CzzChainService {
         List<DhVo> result = ja.toJavaList(DhVo.class);
         return result;
     }
+
+    public List<DhVo> getconvertconfirmitems(){
+        List<Object> params = new ArrayList<>();
+        JSONObject object = getResult(params,"getconvertconfirmitems");
+        JSONArray ja = object.getJSONArray("result");
+        List<DhVo> result = ja.toJavaList(DhVo.class);
+        return result;
+    }
 }
