@@ -180,11 +180,11 @@ public class AccountRoutes {
 
 	@GET
 	@Path(ApiAppRoutePaths.V1.TRANSACTION_DH)
-	public ListModel<DhVo, TransactionCriteria> transfersDh(String txhash,Optional<Integer> page, Optional<Integer> limit) {
+	public ListModel<DhVo, TransactionCriteria> transfersDh(Optional<String> txhash,Optional<String> extTxHash,Optional<String> confirmExtTxHash,Optional<String> mid,Optional<Integer> page, Optional<Integer> limit) {
 		TransactionCriteria criteria = new TransactionCriteria();
 		criteria.setLimit(limit.orElse(20));
 		criteria.setPage(page.orElse(1));
-		return this.accountService.transfersDh(criteria,txhash);
+		return this.accountService.transfersDh(criteria,txhash,extTxHash,confirmExtTxHash,mid);
 	}
 
 	@GET

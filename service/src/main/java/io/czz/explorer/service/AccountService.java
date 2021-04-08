@@ -385,7 +385,7 @@ public class AccountService {
 		return result;
 	}
 
-	public ListModel<DhVo, TransactionCriteria> transfersDh(TransactionCriteria criteria,String txhash) {
+	public ListModel<DhVo, TransactionCriteria> transfersDh(TransactionCriteria criteria,Optional<String> txhash,Optional<String> extTxHash,Optional<String> confirmExtTxHash,Optional<String> mid) {
 		/*List<DhVo> getconvertitems = czzChainService.getconvertitems();
 		ListModel<DhVo, TransactionCriteria> result = new ListModel<DhVo, TransactionCriteria>(criteria,getconvertitems, getconvertitems.size());
 
@@ -428,7 +428,22 @@ public class AccountService {
 		}
 
 		return result;*/
-		List<DhVo> record = this.dslContext.select().from(CHANGE).where(CHANGE.TX_HASH.eq(txhash)).fetchInto(DhVo.class);
+		ArrayList<Condition> conditions = new ArrayList<>();
+		if(txhash.isPresent()){
+			conditions.add(CHANGE.TX_HASH.eq(txhash.get()));
+		}
+		if(extTxHash.isPresent()){
+			conditions.add(CHANGE.EXT_TX_HASH.eq(extTxHash.get()));
+		}
+		if(confirmExtTxHash.isPresent()){
+			conditions.add(CHANGE.CONFIRM_EXT_TX_HASH.eq(confirmExtTxHash.get()));
+		}
+		if(mid.isPresent()){
+			conditions.add(CHANGE.MID.eq(ULong.valueOf(mid.get())));
+		}
+		List<DhVo> record = this.dslContext.select().from(CHANGE)
+				.where(conditions)
+				.fetchInto(DhVo.class);
 		//classzz = 0 eth =1 heco = 2 bsc = 3
 		record.forEach(a ->{
 			a.setAsset_type(change(a.getAsset_type()));
