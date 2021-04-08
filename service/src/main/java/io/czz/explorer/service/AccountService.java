@@ -458,6 +458,7 @@ public class AccountService {
 			a.setAsset_type(change(a.getAsset_type()));
 			a.setConvert_type(change(a.getConvert_type()));
 		});
+
 		ListModel<DhVo,TransactionCriteria> result = new ListModel<DhVo,TransactionCriteria>(criteria, record, record.size());
 		return result;
 	}
