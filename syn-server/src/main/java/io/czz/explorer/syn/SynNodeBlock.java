@@ -341,9 +341,9 @@ public class SynNodeBlock {
         ListModel<DhVo, TransactionCriteria> result = new ListModel<DhVo, TransactionCriteria>(criteria,getconvertitems, getconvertitems.size());
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         for(DhVo vo : getconvertitems) {
-            if(StringUtils.isBlank(vo.getConfirm_ext_tx_hash())){
+            /*if(StringUtils.isBlank(vo.getConfirm_ext_tx_hash())){
                 continue;
-            }
+            }*/
             ChangeRecord record = this.dslContext.select().from(CHANGE).where(CHANGE.MID.eq(ULong.valueOf(vo.getMid()))).fetchOneInto(ChangeRecord.class);
             if (record != null) {
                 logger.info("update change info add confirm: " + vo.getMid());
@@ -353,6 +353,22 @@ public class SynNodeBlock {
                         .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
                         .where(CHANGE.MID.eq(ULong.valueOf(vo.getMid())))
                         .execute();
+            }else{
+                logger.info("insert confirm change " + vo.getMid());
+                record = this.dslContext.insertInto(CHANGE)
+                        .set(CHANGE.MID, ULong.valueOf(vo.getMid()))
+                        .set(CHANGE.AMOUNT, vo.getAmount())
+                        .set(CHANGE.ASSET_TYPE, vo.getAsset_type())
+                        .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
+                        .set(CHANGE.CONVERT_TYPE,vo.getConvert_type())
+                        .set(CHANGE.EXT_TX_HASH,vo.getExt_tx_hash())
+                        .set(CHANGE.TX_HASH,vo.getTx_hash())
+                        .set(CHANGE.FEE_AMOUNT,vo.getFee_amount())
+                        .set(CHANGE.PUB_KEY,vo.getPub_key())
+                        .set(CHANGE.TO_TOKEN,vo.getTo_token())
+                        .set(CHANGE.CREATED_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                        .returning(CHANGE.MID)
+                        .fetchOne();
             }
         }
     }
