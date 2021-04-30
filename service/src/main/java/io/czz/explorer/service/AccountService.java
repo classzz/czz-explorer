@@ -467,14 +467,15 @@ public class AccountService {
 	}
 
 	public ListModel<DhVo, TransactionCriteria> transfersDhList(TransactionCriteria criteria) {
-		List<DhVo> record = this.dslContext.select().from(CHANGE).limit(criteria.getLimit()).offset(criteria.getPage()).fetchInto(DhVo.class);
+		List<DhVo> record = this.dslContext.select().from(CHANGE).orderBy(CHANGE.MID.desc()).limit(criteria.getLimit(),criteria.getPage()).fetchInto(DhVo.class);
+		//List<DhVo> record = this.dslContext.select().from(CHANGE).orderBy(CHANGE.MID.desc()).fetchInto(DhVo.class);
 		//classzz = 0 eth =1 heco = 2 bsc = 3
 		record.forEach(a ->{
 			a.setAsset_type(change(a.getAsset_type()));
 			a.setConvert_type(change(a.getConvert_type()));
 		});
-
-		ListModel<DhVo,TransactionCriteria> result = new ListModel<DhVo,TransactionCriteria>(criteria, record, record.size());
+		long totalCount = this.dslContext.select(DSL.count()).from(CHANGE).fetchOneInto(Long.class);
+		ListModel<DhVo,TransactionCriteria> result = new ListModel<DhVo,TransactionCriteria>(criteria, record,totalCount);
 		return result;
 	}
 }
