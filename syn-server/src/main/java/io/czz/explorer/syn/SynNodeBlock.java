@@ -1,5 +1,7 @@
 package io.czz.explorer.syn;
 
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.ComparisonChain;
 import com.google.inject.Inject;
 import io.czz.explorer.SynServerConfig;
@@ -52,7 +54,7 @@ public class SynNodeBlock {
 
     private TransactionService txService;
 
-    private static final Logger logger = LoggerFactory.getLogger(SynBlock.class);
+    private static final Logger logger = LoggerFactory.getLogger(SynNodeBlock.class);
 
     @Inject
     public SynNodeBlock(DSLContext dslContext,SynServerConfig config,BlockService blockService, TransactionService txService, CzzChainService czzChainService) {
@@ -332,14 +334,41 @@ public class SynNodeBlock {
                         .execute();
             }
         }
+        setConfirmFromHttp();
         setConfirm();
+    }
+    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
+    private void setConfirmFromHttp() {
+        List<ChangeRecord> list = this.dslContext.select().from(CHANGE).where(CHANGE.CONFIRM_EXT_TX_HASH.equal("")).fetchInto(ChangeRecord.class);
+        for(ChangeRecord record : list){
+            String cfm = getConfirmExtTxHashFromHttp(record.getMid());
+            this.dslContext.update(CHANGE)
+                    .set(CHANGE.CONFIRM_EXT_TX_HASH, cfm)
+                    .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                    .where(CHANGE.MID.eq(record.getMid()))
+                    .execute();
+            logger.info("getConfirmExtTxHashFromHttp end:" + record.getMid());
+        }
+    }
+
+    public static String getConfirmExtTxHashFromHttp(ULong mid) {
+        logger.info("getConfirmExtTxHashFromHttp:" + mid);
+        String result = HttpUtil.post("http://39.103.177.160:9090/v1/getconvertitembymid?mid="+mid, "");
+        //logger.info("HttpUtil post :" + result);
+        String cfm = "";
+        if(StringUtils.isNotBlank(result)){
+            JSONObject jsonObject = JSONObject.parseObject(result);
+            cfm = (String)jsonObject.get("confirm_ext_tx_hash");
+        }
+        return cfm;
     }
 
     private void setConfirm() {
         List<DhVo> getconvertitems = czzChainService.getconvertconfirmitems();
         TransactionCriteria criteria = new TransactionCriteria();
         ListModel<DhVo, TransactionCriteria> result = new ListModel<DhVo, TransactionCriteria>(criteria,getconvertitems, getconvertitems.size());
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
         for(DhVo vo : getconvertitems) {
             /*if(StringUtils.isBlank(vo.getConfirm_ext_tx_hash())){
                 continue;
@@ -353,6 +382,8 @@ public class SynNodeBlock {
                         .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
                         .where(CHANGE.MID.eq(ULong.valueOf(vo.getMid())))
                         .execute();
+
+
             }else{
                 logger.info("insert confirm change " + vo.getMid());
                 record = this.dslContext.insertInto(CHANGE)
@@ -372,6 +403,8 @@ public class SynNodeBlock {
             }
         }
     }
+
+
 
     public void removeOrphanBlock(BlockDTO block,int lastBlockNum){
 
