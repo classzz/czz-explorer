@@ -340,26 +340,33 @@ public class SynNodeBlock {
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 
     private void setConfirmFromHttp() {
-        List<ChangeRecord> list = this.dslContext.select().from(CHANGE).where(CHANGE.CONFIRM_EXT_TX_HASH.equal("")).fetchInto(ChangeRecord.class);
+        List<ChangeRecord> list = this.dslContext.select().from(CHANGE).where(" confirm_ext_tx_hash = ''").fetchInto(ChangeRecord.class);
         for(ChangeRecord record : list){
+            logger.info("getConfirmExtTxHashFromHttp start:" + record.getMid());
             String cfm = getConfirmExtTxHashFromHttp(record.getMid());
-            this.dslContext.update(CHANGE)
-                    .set(CHANGE.CONFIRM_EXT_TX_HASH, cfm)
-                    .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
-                    .where(CHANGE.MID.eq(record.getMid()))
-                    .execute();
-            logger.info("getConfirmExtTxHashFromHttp end:" + record.getMid());
+            if(StringUtils.isNotBlank(cfm)) {
+                this.dslContext.update(CHANGE)
+                        .set(CHANGE.CONFIRM_EXT_TX_HASH, cfm)
+                        .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                        .where(CHANGE.MID.eq(record.getMid()))
+                        .execute();
+                logger.info("getConfirmExtTxHashFromHttp end:" + record.getMid());
+            }
         }
     }
 
     public static String getConfirmExtTxHashFromHttp(ULong mid) {
         logger.info("getConfirmExtTxHashFromHttp:" + mid);
         String result = HttpUtil.post("http://39.103.177.160:9090/v1/getconvertitembymid?mid="+mid, "");
-        //logger.info("HttpUtil post :" + result);
         String cfm = "";
         if(StringUtils.isNotBlank(result)){
             JSONObject jsonObject = JSONObject.parseObject(result);
-            cfm = (String)jsonObject.get("confirm_ext_tx_hash");
+            logger.info("jsonobject:"+jsonObject);
+            String result1 = jsonObject.getString("result");
+            logger.info("result1"+result1);
+            JSONObject jj = JSONObject.parseObject(result1);
+            cfm = jj.getString("confirm_ext_tx_hash");
+            logger.info("confirm_ext_tx_hash"+cfm+"**mid="+mid);
         }
         return cfm;
     }
@@ -380,7 +387,7 @@ public class SynNodeBlock {
                 this.dslContext.update(CHANGE)
                         .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
                         .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
-                        .where(CHANGE.MID.eq(ULong.valueOf(vo.getMid())))
+                        .where(CHANGE.MID.eq(ULong.valueOf(vo.getMid()))).and(" confirm_ext_tx_hash != ''")
                         .execute();
 
 
