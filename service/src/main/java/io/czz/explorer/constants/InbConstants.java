@@ -12,4 +12,9 @@ public class InbConstants {
 //    public final static String URL = "http://192.168.1.186:8334";
 //    public final static String URL = "http://192.168.1.186:19526";
 
+
+    //public final static String URL = "http://39.103.177.160:8334";
+   // public final static String NODE_URL_USERNAME = "root";
+    //public final static String NODE_URL_PASSWD = "M8PyRjJAhsmG653B";
+
 }

@@ -375,7 +375,8 @@ public class TransactionService {
                 List<TransferOutRecord> transferOutRecords = this.dslContext.select().from(TRANSFER_OUT).where(TRANSFER_OUT.TRANSACTION_ID.eq(transactionRecord.getId())).orderBy(TRANSFER_OUT.ID.asc()).fetchInto(TransferOutRecord.class);
                 if (transferOutRecords.isEmpty()) {
                     logger.info("transHash error is {}: " + transactionRecord.getHash());
-                    throw new NullPointerException("哇啦啦啦啦,出错拉");
+                    continue;
+                    //throw new NullPointerException("哇啦啦啦啦,出错拉");
                 }
                 if (!transferOutRecords.isEmpty()) {
                     this.dslContext.update(TRANSFER_IN)

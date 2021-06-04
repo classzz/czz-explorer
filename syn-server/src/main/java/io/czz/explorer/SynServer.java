@@ -46,8 +46,16 @@ public class SynServer extends Jooby {
             //密码
             String password = "QGTDS4uDjyvQ4Rbc";
             //mysql链接url
+            String url = "jdbc:mysql://172.27.62.110:3306/czz_tmp";
+            //String url = "jdbc:mysql://47.243.41.104:3306/czz_tmp";
+
+            //用户名
+            //String userName = "czz_tmp";
+            //密码
+            //String password = "CDjrZCzd7GmeGnWM";
+            //mysql链接url
             //String url = "jdbc:mysql://172.27.62.110:3306/czz_tmp";
-            String url = "jdbc:mysql://47.243.41.104:3306/czz_tmp";
+            //String url = "jdbc:mysql://121.89.188.239:51006/czz_tmp";
 
             //这是JDBC Mysql连接
             Connection conn = DriverManager.getConnection(url, userName, password);

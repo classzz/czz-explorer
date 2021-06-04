@@ -77,10 +77,12 @@ public class CzzChainService {
      * @return
      */
     public BlockDTO getBlock(String blockHash){
+        long start = System.currentTimeMillis();
         List<Object> params = new ArrayList<>();
         params.add(blockHash);
         JSONObject object = getResult(params,"getblock");
         BlockDTO blockDTO = JSON.toJavaObject(object.getJSONObject("result"),BlockDTO.class) ;
+        logger.info("getBlock times:"+(System.currentTimeMillis()-start));
         return blockDTO;
     }
 
@@ -89,27 +91,33 @@ public class CzzChainService {
      * @return
      */
     public TransactionDTO getTransaction(String transHash){
+        long start = System.currentTimeMillis();
         List<Object> params = new ArrayList<>();
         params.add(transHash);
         params.add(1);
         JSONObject object = getResult(params,"getrawtransaction");
         TransactionDTO transactionDTO = JSON.toJavaObject(object.getJSONObject("result"),TransactionDTO.class) ;
+        logger.info("getTransaction times:"+(System.currentTimeMillis()-start));
         return transactionDTO;
     }
 
     public List<DhVo> getconvertitems(){
+        long start = System.currentTimeMillis();
         List<Object> params = new ArrayList<>();
         JSONObject object = getResult(params,"getconvertitems");
         JSONArray ja = object.getJSONArray("result");
         List<DhVo> result = ja.toJavaList(DhVo.class);
+        logger.info("getconvertitems times:"+(System.currentTimeMillis()-start));
         return result;
     }
 
     public List<DhVo> getconvertconfirmitems(){
+        long start = System.currentTimeMillis();
         List<Object> params = new ArrayList<>();
         JSONObject object = getResult(params,"getconvertconfirmitems");
         JSONArray ja = object.getJSONArray("result");
         List<DhVo> result = ja.toJavaList(DhVo.class);
+        logger.info("getconvertconfirmitems times:"+(System.currentTimeMillis()-start));
         return result;
     }
 }

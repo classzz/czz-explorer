@@ -248,10 +248,9 @@ public class SynNodeBlock {
             }
         }
 
-
         // 处理每个区块
         for (long i = lastBlockNum +1 ; i <= lastNodeBlockNum ;i++) {
-
+            //调用接口获取区块
             BlockDTO block = blockService.getBlockByHeight(i);
             logger.info("==> Syncing getBlockByHeight: {}", block.getHeight());
 
@@ -301,7 +300,7 @@ public class SynNodeBlock {
             ChangeRecord record = this.dslContext.select().from(CHANGE).where(CHANGE.MID.eq(ULong.valueOf(vo.getMid()))).fetchOneInto(ChangeRecord.class);
 
             if (record == null) {
-                logger.info("save change info");
+                //logger.info("save change info");
                 record = this.dslContext.insertInto(CHANGE)
                         .set(CHANGE.MID, ULong.valueOf(vo.getMid()))
                         .set(CHANGE.AMOUNT, vo.getAmount())
@@ -317,21 +316,23 @@ public class SynNodeBlock {
                         .returning(CHANGE.MID)
                         .fetchOne();
             }else {
-                logger.info("update change info: " + vo.getMid());
+                //logger.info("update change info: " + vo.getMid());
                 //Update if exists
-                this.dslContext.update(CHANGE)
-                        .set(CHANGE.AMOUNT, vo.getAmount())
-                        .set(CHANGE.ASSET_TYPE, vo.getAsset_type())
-                        .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
-                        .set(CHANGE.CONVERT_TYPE,vo.getConvert_type())
-                        .set(CHANGE.EXT_TX_HASH,vo.getExt_tx_hash())
-                        .set(CHANGE.FEE_AMOUNT,vo.getFee_amount())
-                        .set(CHANGE.TX_HASH,vo.getTx_hash())
-                        .set(CHANGE.PUB_KEY,vo.getPub_key())
-                        .set(CHANGE.TO_TOKEN,vo.getTo_token())
-                        .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
-                        .where(CHANGE.MID.eq(ULong.valueOf(vo.getMid())))
-                        .execute();
+                if(StringUtils.isNotBlank(vo.getConfirm_ext_tx_hash())) {
+                    this.dslContext.update(CHANGE)
+                            .set(CHANGE.AMOUNT, vo.getAmount())
+                            .set(CHANGE.ASSET_TYPE, vo.getAsset_type())
+                            .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
+                            .set(CHANGE.CONVERT_TYPE, vo.getConvert_type())
+                            .set(CHANGE.EXT_TX_HASH, vo.getExt_tx_hash())
+                            .set(CHANGE.FEE_AMOUNT, vo.getFee_amount())
+                            .set(CHANGE.TX_HASH, vo.getTx_hash())
+                            .set(CHANGE.PUB_KEY, vo.getPub_key())
+                            .set(CHANGE.TO_TOKEN, vo.getTo_token())
+                            .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                            .where(CHANGE.MID.eq(ULong.valueOf(vo.getMid())))
+                            .execute();
+                }
             }
         }
         setConfirmFromHttp();
@@ -356,17 +357,19 @@ public class SynNodeBlock {
     }
 
     public static String getConfirmExtTxHashFromHttp(ULong mid) {
-        logger.info("getConfirmExtTxHashFromHttp:" + mid);
+        //logger.info("getConfirmExtTxHashFromHttp:" + mid);
         String result = HttpUtil.post("http://39.103.177.160:9090/v1/getconvertitembymid?mid="+mid, "");
         String cfm = "";
         if(StringUtils.isNotBlank(result)){
             JSONObject jsonObject = JSONObject.parseObject(result);
-            logger.info("jsonobject:"+jsonObject);
+            //logger.info("jsonobject:"+jsonObject);
             String result1 = jsonObject.getString("result");
-            logger.info("result1"+result1);
+            //logger.info("result1"+result1);
             JSONObject jj = JSONObject.parseObject(result1);
-            cfm = jj.getString("confirm_ext_tx_hash");
-            logger.info("confirm_ext_tx_hash"+cfm+"**mid="+mid);
+            if(jj != null) {
+                cfm = jj.getString("confirm_ext_tx_hash");
+            }
+            //logger.info("confirm_ext_tx_hash"+cfm+"**mid="+mid);
         }
         return cfm;
     }
@@ -381,18 +384,19 @@ public class SynNodeBlock {
                 continue;
             }*/
             ChangeRecord record = this.dslContext.select().from(CHANGE).where(CHANGE.MID.eq(ULong.valueOf(vo.getMid()))).fetchOneInto(ChangeRecord.class);
-            if (record != null) {
-                logger.info("update change info add confirm: " + vo.getMid());
+            if (record != null ) {
+                //logger.info("update change info add confirm: " + vo.getMid());
                 //Update if exists
-                this.dslContext.update(CHANGE)
-                        .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
-                        .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
-                        .where(CHANGE.MID.eq(ULong.valueOf(vo.getMid()))).and(" confirm_ext_tx_hash != ''")
-                        .execute();
-
+                if(StringUtils.isNotBlank(vo.getConfirm_ext_tx_hash())) {
+                    this.dslContext.update(CHANGE)
+                            .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
+                            .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                            .where(CHANGE.MID.eq(ULong.valueOf(vo.getMid()))).and(" confirm_ext_tx_hash != ''")
+                            .execute();
+                }
 
             }else{
-                logger.info("insert confirm change " + vo.getMid());
+                //logger.info("insert confirm change " + vo.getMid());
                 record = this.dslContext.insertInto(CHANGE)
                         .set(CHANGE.MID, ULong.valueOf(vo.getMid()))
                         .set(CHANGE.AMOUNT, vo.getAmount())
