@@ -344,7 +344,8 @@ public class SynNodeBlock {
         List<ChangeRecord> list = this.dslContext.select().from(CHANGE).where(" confirm_ext_tx_hash = ''").fetchInto(ChangeRecord.class);
         for(ChangeRecord record : list){
             logger.info("getConfirmExtTxHashFromHttp start:" + record.getMid());
-            String cfm = getConfirmExtTxHashFromHttp(record.getMid());
+            //String cfm = getConfirmExtTxHashFromHttp(record.getMid());
+            String cfm = getConfirmExtTxHashFromHttp(record.getExtTxHash());
             if(StringUtils.isNotBlank(cfm)) {
                 this.dslContext.update(CHANGE)
                         .set(CHANGE.CONFIRM_EXT_TX_HASH, cfm)
@@ -356,9 +357,10 @@ public class SynNodeBlock {
         }
     }
 
-    public static String getConfirmExtTxHashFromHttp(ULong mid) {
+    public static String getConfirmExtTxHashFromHttp(String extTxHash) {
         //logger.info("getConfirmExtTxHashFromHttp:" + mid);
-        String result = HttpUtil.post("http://39.103.177.160:9090/v1/getconvertitembymid?mid="+mid, "");
+        //String result = HttpUtil.post("http://39.103.177.160:9090/v1/getconvertitembymid?mid="+mid, "");
+        String result = HttpUtil.post("http://39.103.177.160:9090/v1/getconvertitembyexttxhash?exttxhash="+extTxHash, "");
         String cfm = "";
         if(StringUtils.isNotBlank(result)){
             JSONObject jsonObject = JSONObject.parseObject(result);
