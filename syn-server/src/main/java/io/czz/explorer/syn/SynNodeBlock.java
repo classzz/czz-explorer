@@ -1,6 +1,7 @@
 package io.czz.explorer.syn;
 
 import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.ComparisonChain;
 import com.google.inject.Inject;
@@ -20,6 +21,7 @@ import io.czz.explorer.model.tables.records.ChangeRecord;
 import io.czz.explorer.model.tables.records.TransactionRecord;
 import io.czz.explorer.service.BlockService;
 import io.czz.explorer.service.TransactionService;
+import jdk.nashorn.internal.scripts.JS;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.jooq.DSLContext;
@@ -297,29 +299,68 @@ public class SynNodeBlock {
         ListModel<DhVo, TransactionCriteria> result = new ListModel<DhVo, TransactionCriteria>(criteria,getconvertitems, getconvertitems.size());
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         for(DhVo vo : getconvertitems) {
-            ChangeRecord record = this.dslContext.select().from(CHANGE).where(CHANGE.MID.eq(ULong.valueOf(vo.getMid()))).fetchOneInto(ChangeRecord.class);
+            if(StringUtils.isNotBlank(vo.getExt_tx_hash())) {
+                ChangeRecord record = this.dslContext.select().from(CHANGE).where(CHANGE.EXT_TX_HASH.eq(vo.getExt_tx_hash())).fetchOneInto(ChangeRecord.class);
 
-            if (record == null) {
-                //logger.info("save change info");
-                record = this.dslContext.insertInto(CHANGE)
-                        .set(CHANGE.MID, ULong.valueOf(vo.getMid()))
-                        .set(CHANGE.AMOUNT, vo.getAmount())
-                        .set(CHANGE.ASSET_TYPE, vo.getAsset_type())
-                        .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
-                        .set(CHANGE.CONVERT_TYPE,vo.getConvert_type())
-                        .set(CHANGE.EXT_TX_HASH,vo.getExt_tx_hash())
-                        .set(CHANGE.TX_HASH,vo.getTx_hash())
-                        .set(CHANGE.FEE_AMOUNT,vo.getFee_amount())
-                        .set(CHANGE.PUB_KEY,vo.getPub_key())
-                        .set(CHANGE.TO_TOKEN,vo.getTo_token())
-                        .set(CHANGE.CREATED_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
-                        .returning(CHANGE.MID)
-                        .fetchOne();
-            }else {
-                //logger.info("update change info: " + vo.getMid());
-                //Update if exists
-                if(StringUtils.isNotBlank(vo.getConfirm_ext_tx_hash())) {
+                if (record == null) {
+                    //logger.info("save change info");
+                    record = this.dslContext.insertInto(CHANGE)
+                            .set(CHANGE.MID, ULong.valueOf(vo.getMid()))
+                            .set(CHANGE.AMOUNT, vo.getAmount())
+                            .set(CHANGE.ASSET_TYPE, vo.getAsset_type())
+                            .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
+                            .set(CHANGE.CONVERT_TYPE, vo.getConvert_type())
+                            .set(CHANGE.EXT_TX_HASH, vo.getExt_tx_hash())
+                            .set(CHANGE.TX_HASH, vo.getTx_hash())
+                            .set(CHANGE.FEE_AMOUNT, vo.getFee_amount())
+                            .set(CHANGE.PUB_KEY, vo.getPub_key())
+                            .set(CHANGE.TO_TOKEN, vo.getTo_token())
+                            .set(CHANGE.CREATED_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                            .returning(CHANGE.MID)
+                            .fetchOne();
+                } else {
+                    //logger.info("update change info: " + vo.getMid());
+                    //Update if exists
+                    //if(StringUtils.isNotBlank(vo.getConfirm_ext_tx_hash())) {
                     this.dslContext.update(CHANGE)
+                            .set(CHANGE.AMOUNT, vo.getAmount())
+                            .set(CHANGE.ASSET_TYPE, vo.getAsset_type())
+                            //.set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
+                            .set(CHANGE.CONVERT_TYPE, vo.getConvert_type())
+                            .set(CHANGE.EXT_TX_HASH, vo.getExt_tx_hash())
+                            .set(CHANGE.FEE_AMOUNT, vo.getFee_amount())
+                            .set(CHANGE.TX_HASH, vo.getTx_hash())
+                            .set(CHANGE.PUB_KEY, vo.getPub_key())
+                            .set(CHANGE.TO_TOKEN, vo.getTo_token())
+                            .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                            .where(CHANGE.EXT_TX_HASH.eq(vo.getExt_tx_hash()))
+                            .execute();
+                    //}
+                }
+            }else {
+                ChangeRecord record = this.dslContext.select().from(CHANGE).where(CHANGE.TX_HASH.eq(vo.getTx_hash())).fetchOneInto(ChangeRecord.class);
+
+                if (record == null) {
+                    //logger.info("save change info");
+                    record = this.dslContext.insertInto(CHANGE)
+                            .set(CHANGE.MID, ULong.valueOf(vo.getMid()))
+                            .set(CHANGE.AMOUNT, vo.getAmount())
+                            .set(CHANGE.ASSET_TYPE, vo.getAsset_type())
+                            .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
+                            .set(CHANGE.CONVERT_TYPE, vo.getConvert_type())
+                            .set(CHANGE.EXT_TX_HASH, vo.getExt_tx_hash())
+                            .set(CHANGE.TX_HASH, vo.getTx_hash())
+                            .set(CHANGE.FEE_AMOUNT, vo.getFee_amount())
+                            .set(CHANGE.PUB_KEY, vo.getPub_key())
+                            .set(CHANGE.TO_TOKEN, vo.getTo_token())
+                            .set(CHANGE.CREATED_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                            .returning(CHANGE.MID)
+                            .fetchOne();
+                } else {
+                    //logger.info("update change info: " + vo.getMid());
+                    //Update if exists
+                    if(StringUtils.isNotBlank(vo.getConfirm_ext_tx_hash())) {
+                        this.dslContext.update(CHANGE)
                             .set(CHANGE.AMOUNT, vo.getAmount())
                             .set(CHANGE.ASSET_TYPE, vo.getAsset_type())
                             .set(CHANGE.CONFIRM_EXT_TX_HASH, vo.getConfirm_ext_tx_hash())
@@ -330,17 +371,26 @@ public class SynNodeBlock {
                             .set(CHANGE.PUB_KEY, vo.getPub_key())
                             .set(CHANGE.TO_TOKEN, vo.getTo_token())
                             .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
-                            .where(CHANGE.MID.eq(ULong.valueOf(vo.getMid())))
+                            .where(CHANGE.EXT_TX_HASH.eq(vo.getExt_tx_hash()))
                             .execute();
+                    }
                 }
             }
         }
-        setConfirmFromHttp();
+        //setConfirmFromHttp();
         setConfirm();
     }
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 
-    private void setConfirmFromHttp() {
+    /**
+     * @Description 每5秒执行一次 暂时保留
+     * @Author renml
+     * @CreateDate 2021/6/30 17:30
+     * @param
+     * @return: void
+     * @Version 1.0
+     **/
+    public void setConfirmFromHttp() {
         List<ChangeRecord> list = this.dslContext.select().from(CHANGE).where(" confirm_ext_tx_hash = ''").fetchInto(ChangeRecord.class);
         for(ChangeRecord record : list){
             logger.info("getConfirmExtTxHashFromHttp start:" + record.getMid());
@@ -417,6 +467,50 @@ public class SynNodeBlock {
         }
     }
 
+
+    public String setChangeFromHttp() {
+        String result = HttpUtil.post("http://39.103.177.160:9090/v1/getconvertitem?num=10", "");
+        String cfm = "";
+        if(StringUtils.isNotBlank(result)){
+            JSONObject jsonObject = JSONObject.parseObject(result);
+            String result1 = jsonObject.getString("result");
+            JSONArray jj = JSONObject.parseArray(result1);
+            for(int i=0;i<jj.size();i++){
+                JSONObject jssub = jj.getJSONObject(i);
+                String extTxHash = jssub.getString("ext_tx_hash");
+                if(StringUtils.isNotBlank(extTxHash)){
+                    ChangeRecord record = this.dslContext.select().from(CHANGE).where(CHANGE.EXT_TX_HASH.eq(extTxHash)).fetchOneInto(ChangeRecord.class);
+                    logger.info("record:"+(record==null)+"***"+extTxHash);
+                    if(record == null){
+                        logger.info("start save");
+                        ChangeRecord record1 =  this.dslContext.insertInto(CHANGE)
+                                .set(CHANGE.ASSET_TYPE,jssub.getString("asset_type"))
+                                .set(CHANGE.CONFIRM_EXT_TX_HASH, jssub.getString("confirm_ext_tx_hash"))
+                                .set(CHANGE.CONVERT_TYPE,jssub.getString("convert_type"))
+                                .set(CHANGE.EXT_TX_HASH,jssub.getString("ext_tx_hash"))
+                                .set(CHANGE.TX_HASH,jssub.getString("tx_hash"))
+                                .set(CHANGE.CREATED_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                                .returning(CHANGE.ID)
+                                .fetchOne();
+                        logger.info("save:"+extTxHash);
+                    }else{
+                        if(StringUtils.isBlank(record.getConfirmExtTxHash())) {
+                            this.dslContext.update(CHANGE)
+                                    .set(CHANGE.CONFIRM_EXT_TX_HASH, jssub.getString("confirm_ext_tx_hash"))
+                                    .set(CHANGE.UPDATE_TIME, Timestamp.valueOf(format.format(System.currentTimeMillis())))
+                                    .where(CHANGE.EXT_TX_HASH.eq(jssub.getString("ext_tx_hash")))
+                                    .execute();
+                        }
+                    }
+                }
+            }
+        }
+        return cfm;
+    }
+
+    public static void main(String[] args) {
+        //setChangeFromHttp();
+    }
 
 
     public void removeOrphanBlock(BlockDTO block,int lastBlockNum){

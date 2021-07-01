@@ -50,5 +50,35 @@ public class FullNodeBlockSynJob {
         IS_STATE = false;
     }
 
+    @Scheduled("5000ms")
+    public void setChange() throws ServiceException {
+
+        if (!this.config.isBlockJobEnabled() || IS_STATE) {
+            return;
+        }
+        IS_STATE = true;
+        try {
+            this.synNodeBlock.setConfirmFromHttp();
+        } catch (RuntimeException e) {
+            logger.error(e.toString());
+        }
+        IS_STATE = false;
+    }
+
+    @Scheduled("1000ms")
+    public void setChangeFromHttp() throws ServiceException {
+
+        if (!this.config.isBlockJobEnabled() || IS_STATE) {
+            return;
+        }
+        IS_STATE = true;
+        try {
+            this.synNodeBlock.setChangeFromHttp();
+        } catch (RuntimeException e) {
+            logger.error(e.toString());
+        }
+        IS_STATE = false;
+    }
+
 
 }
