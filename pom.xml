@@ -21,7 +21,7 @@
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jooq.version>3.9.2</jooq.version>
-        <mysql.connector.version>5.1.38</mysql.connector.version>
+        <mysql.connector.version>8.0.28</mysql.connector.version>
         <flyway.version>5.0.7</flyway.version>
         <junit.version>4.12</junit.version>
     </properties>
@@ -625,7 +625,7 @@
                     <dependency>
                         <groupId>mysql</groupId>
                         <artifactId>mysql-connector-java</artifactId>
-                        <version>5.1.38</version>
+                        <version>8.0.28</version>
                     </dependency>
 
 
